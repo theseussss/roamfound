@@ -1,0 +1,88 @@
+# 话题树
+
+> **由 `tree-gen.py` 生成，请勿手动编辑**
+> 最后生成：{{ generated_at }}
+> 项目类型：{{ project_type }}
+> 节点统计：{{ nodes_total }}（活跃 {{ nodes_active }} / 终态 {{ nodes_terminal }}）
+
+---
+
+## 📊 Mermaid 视图
+
+```mermaid
+graph TD
+{%- for node in nodes %}
+    {{ node.id }}["{{ node.emoji }} {{ node.short_id }} {{ node.title }} {{ node.status }}{% if node.scratch_status %} · {{ node.scratch_status }}{% endif %}"]
+{%- endfor %}
+{%- for edge in edges %}
+    {{ edge.parent }} --> {{ edge.child }}
+{%- endfor %}
+{%- for node in nodes %}
+{%- if node.status == "✅" %}
+    style {{ node.id }} fill:#d4edda
+{%- elif node.status == "⏸️" %}
+    style {{ node.id }} fill:#fff3cd
+{%- elif node.status == "🔻" %}
+    style {{ node.id }} fill:#f8d7da
+{%- elif node.status == "🗑️" %}
+    style {{ node.id }} fill:#e2e3e5
+{%- endif %}
+{%- endfor %}
+```
+
+---
+
+## 🌲 ASCII 视图（按 root 标签分组）
+
+```
+{% for group in groups -%}
+{{ group.root_label }}  [{{ group.count }} 话题 · 活跃 {{ group.active_count }}]
+{%- for line in group.subtree_ascii %}
+{{ line }}
+{%- endfor %}
+
+{% endfor -%}
+```
+
+<!--
+C 方案：不再有"根话题"。按 frontmatter.root 字段分组，每组下挂本 root 的话题。
+组内仍保留 parent 嵌套关系。
+
+ASCII 渲染示例：
+🎯目标  [3 话题 · 活跃 2]
+├── 010 论证标准  [✅]
+├── 011 描述vs规范  [⏳]
+│   └── 014 语法框架定位  [⏳]
+└── 012 对象合法性  [⏸️]
+
+🧠论证  [2 话题 · 活跃 2]
+├── 020 第二间隔  [⏳]
+└── 025 测量vs构念  [⏳]
+-->
+
+---
+
+## 📋 节点明细
+
+| ID | 根类 | 标题 | 话题卡 | 讨论 | 父 | 更新 |
+|:---|:-:|:---|:-:|:-:|:---|:---|
+{%- for node in nodes_sorted %}
+| [[{{ node.slug }}]] | {{ node.root_emoji }} | {{ node.title }} | {{ node.status }} | {% if node.scratch_status %}{{ node.scratch_status }}{% else %}—{% endif %} | {% if node.parent %}{{ node.parent }}{% else %}—{% endif %} | {{ node.updated }} |
+{%- endfor %}
+
+---
+
+## 🔎 状态图例
+
+| 图标 | 含义 | 物理位置 |
+|:-:|:---|:---|
+| ⏳ | 进行中 | `topics/NNN_简称/` |
+| ✅ | 已关闭 | `topics/NNN_简称/`（原地） |
+| ⏸️ | 已搁置 | `topics/NNN_简称/`（原地） |
+| 🔻 | 已推翻 | `topics/NNN_简称/`（原地） |
+| 🗑️ | 已废弃 | `topics/NNN_简称/`（原地，极端情况） |
+
+<!--
+终态原则（见 references/topic-lifecycle.md §6）：所有终态物理留原地，靠 frontmatter status 区分。
+不移 archive/，保证引用链不断、git 历史完整。
+-->

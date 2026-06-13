@@ -1,0 +1,2519 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ project_name }} · 话题关系工作台</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef2e8;
+      --panel: #fffdf6;
+      --panel-strong: #fffaf0;
+      --ink: #24231f;
+      --muted: #74766d;
+      --line: #d9dfd1;
+      --line-dark: #d7d9cf;
+      --hot: #cf7b36;
+      --hot-soft: #f7eadc;
+      --cyan: #2c7d78;
+      --cyan-soft: #dcefed;
+      --blue: #5277bf;
+      --blue-soft: #e6eefb;
+      --green: #4d875a;
+      --green-soft: #dfeee3;
+      --amber: #a87924;
+      --amber-soft: #f3e4c6;
+      --red: #b44d43;
+      --red-soft: #f2d8d5;
+      --shadow: 0 14px 34px rgba(42, 50, 38, 0.08);
+      --radius: 8px;
+      --mono: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+      --sans: "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      background:
+        linear-gradient(90deg, rgba(39, 75, 64, 0.045) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(39, 75, 64, 0.045) 1px, transparent 1px),
+        #eef2e8;
+      background-size: 24px 24px;
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.45;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible {
+      outline: 2px solid rgba(220, 107, 52, 0.62);
+      outline-offset: 2px;
+    }
+
+    .app {
+      --inspector-width: 340px;
+      position: relative;
+      display: grid;
+      grid-template-columns: 236px minmax(0, 1fr) var(--inspector-width);
+      grid-template-rows: 58px minmax(0, 1fr) clamp(260px, 30vh, 340px);
+      width: 100vw;
+      height: 100vh;
+      gap: 12px 14px;
+      padding: 14px;
+    }
+
+    .projection {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.86;
+    }
+
+    .rail,
+    .workspace-topbar,
+    .map-shell,
+    .inspector,
+    .stream-dock,
+    .reader {
+      position: relative;
+      z-index: 1;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .rail {
+      grid-row: 1 / 4;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 18px;
+      min-height: 0;
+      margin: -14px 0 -14px -14px;
+      padding: 22px 14px 16px;
+      border: 0;
+      border-right: 1px solid #cbd4c7;
+      border-radius: 0;
+      background: #e7eee3;
+      box-shadow: none;
+    }
+
+    .brand-row {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      align-items: start;
+      gap: 10px;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 1px solid #8db8af;
+      border-radius: 8px;
+      background: #fbfef9;
+      color: #217068;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .brand h1,
+    .workspace-title h1 {
+      margin: 0;
+      overflow-wrap: anywhere;
+      font-size: 17px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .workspace-title h1 { font-size: 20px; }
+
+    .brand p,
+    .hint,
+    .meta,
+    .small {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .workspace-topbar {
+      grid-column: 2 / 4;
+      grid-row: 1;
+      z-index: 28;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-width: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .workspace-title { min-width: 0; }
+
+    .topbar-right {
+      display: grid;
+      grid-template-columns: minmax(0, auto) auto;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .status-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .drawer-actions {
+      display: grid;
+      grid-template-columns: minmax(116px, 1fr);
+      gap: 7px;
+    }
+
+    .drawer-button {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fffdf6;
+      color: var(--ink);
+      padding: 0 10px;
+      text-align: left;
+    }
+
+    .drawer-button span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .drawer-button strong {
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .drawer-button.is-active,
+    .drawer-button:hover {
+      border-color: rgba(44, 125, 120, 0.42);
+      background: var(--cyan-soft);
+      color: #1f5f5b;
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      color: #6f796d;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .rail-nav,
+    .tools {
+      display: grid;
+      gap: 10px;
+    }
+
+    .rail-button,
+    .mode-button,
+    .tool-button,
+    .doc-button,
+    .chip-button,
+    .reader-close {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fffdf6;
+      color: var(--ink);
+      padding: 0 10px;
+    }
+
+    .rail-button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      justify-content: flex-start;
+      background: #fffef9;
+      text-align: left;
+    }
+
+    .rail-button .nav-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 20px;
+      color: #2c7d78;
+      font-weight: 900;
+    }
+
+    .rail-button strong {
+      display: block;
+      font-size: 14px;
+      line-height: 1.1;
+    }
+
+    .mode-button {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+    }
+
+    .rail-button.mode-button {
+      justify-content: flex-start;
+    }
+
+    .tool-button[aria-disabled="true"] {
+      pointer-events: none;
+      color: var(--muted);
+      background: #f8faf3;
+    }
+
+    .mode-button.is-active,
+    .rail-button.is-active,
+    .tool-button:hover,
+    .mode-button:hover,
+    .rail-button:hover,
+    .doc-button:hover,
+    .chip-button:hover {
+      border-color: rgba(44, 125, 120, 0.42);
+      background: var(--cyan-soft);
+      color: #1f5f5b;
+    }
+
+    .rail-button.is-active {
+      color: #1f6f68;
+      font-weight: 800;
+    }
+
+    .legend {
+      display: grid;
+      gap: 6px;
+      align-self: end;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .corner-config {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .corner-config select {
+      min-width: 0;
+      height: 28px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: #fffdf6;
+      color: var(--ink);
+      padding: 0 6px;
+      font: inherit;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-line {
+      height: 0;
+      border-top: 2px solid #77857a;
+    }
+    .legend-line.parent { border-color: var(--cyan); }
+    .legend-line.link { border-top-style: dashed; border-color: var(--hot); }
+    .legend-line.route { border-top-style: dotted; border-color: #7c837a; }
+    .legend-line.cluster { border-color: rgba(83, 119, 184, 0.72); }
+
+    body.corner-sharp .rail,
+    body.corner-sharp .workspace-topbar,
+    body.corner-sharp .map-shell,
+    body.corner-sharp .inspector,
+    body.corner-sharp .stream-dock,
+    body.corner-sharp .reader,
+    body.corner-sharp .topic-node,
+    body.corner-sharp .hover-card,
+    body.corner-sharp .tool-button,
+    body.corner-sharp .mode-button,
+    body.corner-sharp .rail-button,
+    body.corner-sharp .doc-button,
+    body.corner-sharp .drawer-button,
+    body.corner-sharp .panel-close,
+    body.corner-sharp .reader-close,
+    body.corner-sharp .list-item,
+    body.corner-sharp .timeline-item,
+    body.corner-sharp .map-viewport,
+    body.corner-sharp .empty {
+      border-radius: 2px;
+    }
+
+    .map-shell {
+      grid-column: 2 / 4;
+      grid-row: 2 / 4;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      background: #fffdf6;
+    }
+
+    .app.has-inspector .map-shell {
+      grid-column: 2;
+      grid-row: 2 / 4;
+    }
+
+    .app.has-stream:not(.has-inspector) .map-shell {
+      grid-column: 2 / 4;
+      grid-row: 2 / 4;
+    }
+
+    .app.has-stream.has-inspector .map-shell {
+      grid-column: 2;
+      grid-row: 2 / 4;
+    }
+
+    .app.has-stream.has-inspector .inspector {
+      grid-row: 2 / 4;
+    }
+
+    .map-topbar {
+      z-index: 4;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      min-width: 0;
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px 10px;
+    }
+
+    .map-title {
+      flex: 1 1 330px;
+      min-width: 0;
+      max-width: none;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+    }
+
+    .map-title h2 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .map-controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(58px, 1fr));
+      gap: 7px;
+      flex: 0 0 min(336px, 48%);
+      max-width: 48%;
+    }
+
+    .map-controls .mode-button,
+    .map-controls .tool-button {
+      width: 100%;
+      min-width: 0;
+      min-height: 32px;
+      padding: 0 9px;
+      justify-content: center;
+    }
+
+    .map-controls #zoom-label {
+      min-width: 58px;
+      justify-content: center;
+    }
+
+    .map-viewport {
+      position: relative;
+      min-height: 0;
+      margin: 0 14px 14px;
+      overflow: hidden;
+      touch-action: none;
+      cursor: grab;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, rgba(44, 125, 120, 0.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(44, 125, 120, 0.08) 1px, transparent 1px),
+        #fffef8;
+      background-size: 28px 28px;
+    }
+
+    .map-shelf {
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      z-index: 5;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 7px;
+      pointer-events: none;
+    }
+
+    .map-shelf .tool-button {
+      pointer-events: auto;
+      min-height: 32px;
+      background: rgba(255, 253, 246, 0.92);
+      backdrop-filter: blur(8px);
+    }
+
+    .map-legend-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 8px;
+    }
+
+    .legend-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 22px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.62);
+      padding: 2px 7px;
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .legend-pill .legend-line {
+      width: 25px;
+    }
+
+    .map-viewport.is-panning { cursor: grabbing; }
+
+    .relation-canvas,
+    .node-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .node-layer { z-index: 3; pointer-events: none; }
+
+    .topic-node {
+      position: absolute;
+      display: block;
+      width: 128px;
+      min-height: 54px;
+      border: 1px solid #d3dbce;
+      border-radius: 7px;
+      background: rgba(255, 255, 250, 0.96);
+      color: var(--ink);
+      padding: 8px 9px 7px;
+      box-shadow: 0 8px 22px rgba(42, 54, 38, 0.07);
+      pointer-events: auto;
+      transform-origin: center;
+      transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+      user-select: none;
+      will-change: transform, left, top;
+    }
+
+    .topic-node:hover,
+    .topic-node.is-selected {
+      border-color: rgba(220, 107, 52, 0.92);
+      background: #fffaf0;
+      box-shadow: 0 0 0 4px rgba(207, 123, 54, 0.10), 0 12px 28px rgba(42, 54, 38, 0.10);
+    }
+
+    .topic-node.is-focus {
+      border-color: var(--cyan);
+      background: #e7f4f2;
+      box-shadow: 0 0 0 7px rgba(44, 125, 120, 0.12), 0 12px 28px rgba(42, 54, 38, 0.10);
+    }
+
+    .topic-node.is-locating {
+      animation: locate-pulse 720ms ease-out 1;
+    }
+
+    .topic-node.is-locating::after {
+      content: "";
+      position: absolute;
+      inset: -12px;
+      border: 1px solid rgba(44, 125, 120, 0.52);
+      border-radius: 12px;
+      pointer-events: none;
+      animation: locate-ring 820ms ease-out 1;
+    }
+
+    @keyframes locate-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(44, 125, 120, 0.22), 0 12px 28px rgba(42, 54, 38, 0.10); }
+      55% { box-shadow: 0 0 0 16px rgba(44, 125, 120, 0.12), 0 12px 28px rgba(42, 54, 38, 0.10); }
+      100% { box-shadow: 0 0 0 7px rgba(44, 125, 120, 0.12), 0 12px 28px rgba(42, 54, 38, 0.10); }
+    }
+
+    @keyframes locate-ring {
+      0% { opacity: 0; transform: scale(0.82); }
+      24% { opacity: 0.9; }
+      100% { opacity: 0; transform: scale(1.38); }
+    }
+
+    .topic-node.is-dragging {
+      cursor: grabbing;
+      transition: none;
+    }
+
+    .node-id {
+      display: grid;
+      place-items: center;
+      width: auto;
+      height: auto;
+      border-radius: 0;
+      background: transparent;
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 800;
+      justify-content: start;
+    }
+
+    .node-copy { min-width: 0; text-align: left; }
+
+    .node-copy strong,
+    .node-copy span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .node-copy strong { margin-top: 3px; font-size: 12px; }
+    .node-copy span { color: var(--muted); font-size: 11px; }
+
+    .hover-card {
+      position: fixed;
+      z-index: 20;
+      display: none;
+      width: min(384px, calc(100vw - 24px));
+      max-height: min(520px, calc(100vh - 24px));
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffdf6;
+      color: var(--ink);
+      box-shadow: 0 18px 44px rgba(38, 48, 34, 0.16);
+      padding: 0;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+
+    .hover-card.is-visible {
+      display: grid;
+      animation: hover-in 120ms ease-out;
+    }
+
+    .hover-head {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 12px 10px;
+    }
+
+    .hover-kicker {
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .hover-card h3 {
+      margin: 3px 0 0;
+      overflow-wrap: anywhere;
+      font-size: 15px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .hover-card .chip-row {
+      margin-top: 8px;
+      gap: 5px;
+    }
+
+    .hover-facts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hover-fact {
+      min-width: 0;
+      padding: 9px 10px;
+      border-right: 1px solid var(--line);
+    }
+
+    .hover-fact:last-child { border-right: 0; }
+
+    .hover-fact span,
+    .hover-preview-label {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0;
+    }
+
+    .hover-fact strong {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .hover-sections {
+      display: grid;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .hover-section {
+      padding: 10px 12px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hover-section:last-child { border-bottom: 0; }
+
+    .hover-section h4 {
+      margin: 2px 0 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .hover-section p {
+      display: -webkit-box;
+      margin: 0;
+      overflow: hidden;
+      color: #5f665e;
+      font-size: 12px;
+      line-height: 1.55;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .hover-task-list {
+      display: grid;
+      gap: 5px;
+      margin: 4px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .hover-task {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 7px;
+      align-items: start;
+      min-width: 0;
+    }
+
+    .hover-task-check {
+      display: inline-grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--line-dark);
+      border-radius: 5px;
+      background: #fffaf0;
+      font-size: 11px;
+      line-height: 1;
+    }
+
+    .hover-task strong,
+    .hover-task small {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .hover-task strong {
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .hover-task small {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    @keyframes hover-in {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .inspector {
+      grid-column: 3;
+      grid-row: 2 / 4;
+      display: none;
+      grid-template-rows: auto auto auto minmax(0, 1fr);
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--panel);
+      color: var(--ink);
+    }
+
+    .app.has-inspector .inspector { display: grid; }
+
+    .app.has-doc .inspector {
+      grid-template-rows: auto auto minmax(0, 1fr);
+    }
+
+    .splitter-handle {
+      position: absolute;
+      left: -8px;
+      top: 0;
+      bottom: 0;
+      z-index: 5;
+      width: 16px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+      cursor: col-resize;
+    }
+
+    .splitter-handle::after {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 14px;
+      bottom: 14px;
+      width: 2px;
+      border-radius: 999px;
+      background: rgba(44, 125, 120, 0.18);
+      opacity: 0;
+      transition: opacity 0.16s ease, background 0.16s ease;
+    }
+
+    .splitter-handle:hover::after,
+    .app.is-resizing .splitter-handle::after {
+      background: rgba(44, 125, 120, 0.58);
+      opacity: 1;
+    }
+
+    .inspector-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 10px;
+      border-bottom: 1px solid var(--line-dark);
+      padding: 14px;
+    }
+
+    .inspector-header h2 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.15;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .inspector-actions {
+      display: flex;
+      align-items: start;
+      gap: 7px;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .chip,
+    .chip-button {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      border: 1px solid var(--line-dark);
+      border-radius: 999px;
+      padding: 3px 8px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      background: rgba(23, 21, 18, 0.04);
+    }
+
+    .chip-button {
+      color: var(--ink);
+      background: transparent;
+    }
+
+    .chip-green { background: var(--green-soft); color: var(--green); }
+    .chip-cyan { background: var(--cyan-soft); color: #297268; }
+    .chip-blue { background: var(--blue-soft); color: var(--blue); }
+    .chip-amber { background: var(--amber-soft); color: var(--amber); }
+    .chip-red { background: var(--red-soft); color: var(--red); }
+    .chip-hot { background: var(--hot-soft); color: var(--hot); }
+
+    .doc-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      border-bottom: 1px solid var(--line-dark);
+      padding: 12px 14px;
+    }
+
+    .panel-close {
+      min-width: 34px;
+      min-height: 32px;
+      border: 1px solid var(--line-dark);
+      border-radius: 7px;
+      background: #fffaf0;
+      color: var(--ink);
+      padding: 0 9px;
+    }
+
+    .doc-button {
+      border-color: var(--line-dark);
+      background: #fffaf0;
+      color: var(--ink);
+    }
+
+    .doc-button.is-active,
+    .doc-button:hover {
+      border-color: rgba(44, 125, 120, 0.42);
+      background: var(--cyan-soft);
+      color: #1f5f5b;
+    }
+
+    .doc-panel {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+      max-height: min(46vh, 460px);
+      border-bottom: 1px solid var(--line-dark);
+      background: #fffdf8;
+      animation: drawer-drop 160ms ease-out;
+    }
+
+    .app.has-doc .doc-panel {
+      max-height: none;
+      border-bottom: 0;
+      animation: doc-slide-left 170ms ease-out;
+    }
+
+    .app.has-doc .inspector-body { display: none; }
+
+    .doc-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--line-dark);
+      padding: 10px 14px;
+    }
+
+    .doc-panel-header h3 {
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      letter-spacing: 0;
+    }
+
+    .doc-panel-body {
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+    }
+
+    .doc-panel .markdown {
+      max-width: none;
+      margin: 0;
+      font-size: 12px;
+    }
+
+    .doc-panel .markdown h1 { font-size: 18px; }
+    .doc-panel .markdown h2 { margin-top: 16px; font-size: 15px; }
+    .doc-panel .markdown h3 { margin-top: 14px; font-size: 13px; }
+
+    .inspector-body {
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+    }
+
+    .block { margin-bottom: 16px; }
+    .block h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      letter-spacing: 0;
+    }
+
+    .list {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .list-item {
+      border: 1px solid var(--line-dark);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.62);
+      padding: 9px;
+    }
+
+    .list-item strong { display: block; font-size: 13px; }
+    .list-item p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+
+    .stream-dock {
+      position: fixed;
+      left: 264px;
+      right: 14px;
+      top: 84px;
+      bottom: 14px;
+      z-index: 24;
+      display: none;
+      grid-template-columns: minmax(0, 1fr);
+      min-height: 0;
+      overflow: hidden;
+      background: var(--panel);
+      animation: drawer-rise 170ms ease-out;
+    }
+
+    .app.has-stream .stream-dock { display: grid; }
+
+    .topic-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .topic-summary-card {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fffdf8;
+      padding: 10px;
+    }
+
+    .topic-summary-card strong {
+      display: block;
+      font-family: var(--mono);
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .topic-summary-card span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @keyframes drawer-rise {
+      from { transform: translateY(18px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes drawer-drop {
+      from { transform: translateY(-18px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes doc-slide-left {
+      from { transform: translateX(24px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .stream-main {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      padding: 16px;
+    }
+
+    .stream-main h2 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    .dock-header {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .dock-header h2 { margin: 0; }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 9px;
+      align-content: start;
+    }
+
+    .timeline-item,
+    .worktree-row {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fffdf8;
+      padding: 8px;
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr);
+      gap: 12px;
+      border-left: 4px solid #8aa8d8;
+      padding: 10px 12px;
+    }
+
+    .timeline-item.signin { border-left-color: var(--cyan); }
+    .timeline-item.signout { border-left-color: var(--hot); }
+    .timeline-item.progress { border-left-color: var(--green); }
+    .timeline-item.sidewrite { border-left-color: var(--blue); }
+
+    .timeline-kind {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .timeline-title {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .timeline-detail {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .worktree-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .reader {
+      position: fixed;
+      inset: 18px;
+      z-index: 30;
+      display: none;
+      grid-template-rows: auto minmax(0, 1fr);
+      background: var(--panel-strong);
+      color: var(--ink);
+    }
+
+    .reader.is-open { display: grid; }
+
+    .reader-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--line-dark);
+      padding: 12px 14px;
+    }
+
+    .reader-title {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .reader-title h2 {
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 17px;
+    }
+
+    .reader-close {
+      border-color: var(--line-dark);
+      background: #fffaf0;
+      color: var(--ink);
+      flex: 0 0 auto;
+    }
+
+    .reader-close.reader-close-leading {
+      min-width: 44px;
+      padding: 0 12px;
+    }
+
+    .reader-content {
+      overflow: auto;
+      padding: 24px min(5vw, 58px);
+    }
+
+    .markdown {
+      max-width: 940px;
+      margin: 0 auto;
+    }
+
+    .markdown h1, .markdown h2, .markdown h3 { line-height: 1.24; letter-spacing: 0; }
+    .markdown h1 { font-size: 28px; }
+    .markdown h2 { margin-top: 26px; font-size: 21px; }
+    .markdown h3 { margin-top: 20px; font-size: 16px; }
+    .markdown p { margin: 10px 0; }
+    .markdown blockquote {
+      margin: 12px 0;
+      border-left: 3px solid var(--hot);
+      color: var(--muted);
+      padding-left: 12px;
+    }
+    .markdown code, .code { font-family: var(--mono); font-size: 12px; }
+    .markdown pre {
+      overflow: auto;
+      border: 1px solid var(--line-dark);
+      border-radius: 7px;
+      background: #f1eadc;
+      padding: 12px;
+    }
+    .markdown ul { padding-left: 1.4rem; }
+
+    .empty {
+      border: 1px dashed var(--line-dark);
+      border-radius: 7px;
+      padding: 14px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 1100px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto minmax(520px, 1fr) auto auto;
+        overflow: auto;
+        height: 100vh;
+      }
+      body { overflow: auto; }
+      .rail, .workspace-topbar, .map-shell, .inspector, .stream-dock {
+        grid-column: 1;
+        grid-row: auto;
+      }
+      .app.has-inspector .map-shell,
+      .app.has-stream:not(.has-inspector) .map-shell,
+      .app.has-stream.has-inspector .map-shell {
+        grid-column: 1;
+        grid-row: auto;
+      }
+      .inspector,
+      .stream-dock {
+        display: none;
+      }
+      .app.has-inspector .inspector { display: grid; }
+      .app.has-stream .stream-dock { display: grid; }
+      .rail {
+        display: block;
+        margin: 0;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        min-height: auto;
+      }
+      .splitter-handle { display: none; }
+      .rail > section + section { margin-top: 14px; }
+      .workspace-topbar { display: block; }
+      .topbar-right {
+        grid-template-columns: 1fr;
+        margin-top: 10px;
+      }
+      .status-strip { justify-content: flex-start; margin-top: 10px; }
+      .rail-nav, .tools { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .map-topbar { display: grid; grid-template-columns: 1fr; }
+      .map-controls { width: min(336px, 100%); max-width: none; }
+      .legend { display: none; }
+      .map-shell { min-height: 560px; }
+      .inspector { min-height: 520px; }
+      .stream-dock {
+        left: 14px;
+        right: 14px;
+      }
+      .stream-dock { grid-template-columns: 1fr; }
+      .timeline { grid-template-columns: 1fr; }
+      .timeline-item { grid-template-columns: 1fr; }
+      .topic-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 620px) {
+      .app { padding: 8px; gap: 8px; }
+      .rail-nav, .tools, .doc-actions { grid-template-columns: 1fr 1fr; }
+      .drawer-actions { grid-template-columns: 1fr; }
+      .map-topbar { display: block; }
+      .map-controls { margin-top: 10px; }
+      .map-shelf { left: 14px; right: 14px; justify-content: flex-start; }
+      .map-title { max-width: 100%; }
+      .map-title h2 { font-size: 15px; }
+      .topic-node { width: 118px; min-height: 48px; }
+      .reader { inset: 8px; }
+      .stream-dock {
+        left: 8px;
+        right: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas class="projection" id="projection-canvas" aria-hidden="true"></canvas>
+  <div class="app" id="app">
+    <aside class="rail">
+      <section class="brand">
+        <div class="brand-row">
+          <div class="brand-mark" aria-hidden="true">流</div>
+          <div>
+            <h1>{{ project_name }}</h1>
+            <p>话题关系控制台</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">对象</div>
+        <div class="rail-nav">
+          <button class="rail-button mode-button is-active" type="button" data-rail-mode="network"><span class="nav-icon">⌘</span><strong>引用关系</strong></button>
+          <button class="rail-button mode-button" type="button" data-rail-mode="tree"><span class="nav-icon">↳</span><strong>父子关系</strong></button>
+          <button class="rail-button mode-button" type="button" data-rail-mode="route"><span class="nav-icon">↝</span><strong>讨论推进</strong></button>
+        </div>
+      </section>
+
+      <section class="legend" aria-label="关系图例">
+        <div class="section-title">线条含义</div>
+        <div class="legend-row"><span class="legend-line parent"></span><span>父子关系</span></div>
+        <div class="legend-row"><span class="legend-line link"></span><span>显式引用</span></div>
+        <div class="legend-row"><span class="legend-line route"></span><span>讨论推进</span></div>
+        <div class="legend-row"><span class="legend-line cluster"></span><span>同类分组</span></div>
+        <label class="corner-config">
+          <span>角</span>
+          <select id="corner-style" aria-label="卡片角样式">
+            <option value="sharp">锐</option>
+            <option value="soft">圆</option>
+          </select>
+        </label>
+      </section>
+
+    </aside>
+
+    <header class="workspace-topbar">
+      <div class="workspace-title">
+        <h1>话题关系图</h1>
+        <p class="hint" id="workspace-subtitle">生成时间 {{ generated_at }} · 关系图优先呈现话题路线与承载关系。</p>
+      </div>
+      <div class="topbar-right">
+        <div class="status-strip" aria-label="状态摘要">
+          <span class="chip chip-cyan" id="chip-focus">焦点 -</span>
+          <span class="chip chip-hot" id="chip-refs">引用关系 0</span>
+          <span class="chip chip-amber" id="chip-tree">父子关系 0</span>
+          <span class="chip chip-green" id="chip-watcher">watcher -</span>
+        </div>
+        <div class="drawer-actions" aria-label="内容抽屉">
+          <button class="drawer-button" type="button" data-toggle-panel="stream" aria-expanded="false"><span>项目流水</span><strong id="stream-count-value">0</strong></button>
+        </div>
+      </div>
+    </header>
+
+    <section class="map-shell">
+      <div class="map-topbar">
+        <div class="map-title">
+          <h2 id="map-heading">关系图</h2>
+          <p class="hint" id="map-subtitle">选择一个话题查看 Card、Scratch、Tasks 与附件。</p>
+          <div class="map-legend-inline" aria-label="关系图例">
+            <span class="legend-pill"><span class="legend-line parent"></span>父 → 子</span>
+            <span class="legend-pill"><span class="legend-line link"></span>[[引用]] 连接</span>
+            <span class="legend-pill"><span class="legend-line route"></span>流水推进</span>
+          </div>
+        </div>
+        <div class="map-controls">
+          <button class="mode-button is-active" type="button" data-mode="network"><span>引用关系</span></button>
+          <button class="mode-button" type="button" data-mode="tree"><span>父子关系</span></button>
+          <button class="mode-button" type="button" data-mode="route"><span>讨论推进</span></button>
+          <button class="tool-button" type="button" id="zoom-out">-</button>
+          <button class="tool-button" type="button" id="zoom-label" aria-disabled="true">100%</button>
+          <button class="tool-button" type="button" id="zoom-in">+</button>
+        </div>
+      </div>
+      <div class="map-viewport" id="map-viewport">
+        <canvas class="relation-canvas" id="relation-canvas"></canvas>
+        <div class="node-layer" id="node-layer"></div>
+        <div class="map-shelf" aria-label="展开面板">
+          <button class="tool-button" type="button" data-focus-topic title="定位项目当前焦点话题" aria-label="定位项目当前焦点话题">当前焦点</button>
+          <button class="tool-button" type="button" id="fit-map" title="全图：只调整视野缩放和平移" aria-label="全图：只调整视野缩放和平移">全图</button>
+          <button class="tool-button" type="button" id="reset-layout" title="重排：清除拖拽位置并回到自动布局" aria-label="重排：清除拖拽位置并回到自动布局">重排</button>
+        </div>
+      </div>
+      <div class="hover-card" id="hover-card"></div>
+    </section>
+
+    <aside class="inspector" id="inspector"></aside>
+
+    <section class="stream-dock">
+      <div class="stream-main">
+        <div class="dock-header">
+          <h2>项目流水</h2>
+          <button class="panel-close" type="button" data-close-panel="stream">×</button>
+        </div>
+        <p class="hint" id="stream-preview"></p>
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="reader" id="reader" aria-label="阅读器">
+    <div class="reader-toolbar">
+      <button class="reader-close reader-close-leading" type="button" data-reader-close>×</button>
+      <div class="reader-title">
+        <h2 id="reader-title">阅读器</h2>
+        <p class="hint" id="reader-subtitle"></p>
+      </div>
+    </div>
+    <article class="reader-content">
+      <div class="markdown" id="reader-body"></div>
+    </article>
+  </section>
+
+  <script id="dashboard-data" type="application/json">{{ dashboard_payload | safe }}</script>
+  <script id="dashboard-docs" type="application/json">{{ dashboard_docs_payload | safe }}</script>
+  <script>
+    const data = JSON.parse(document.getElementById("dashboard-data").textContent);
+    let docsCache = null;
+    const focusSlug = data.focus?.slug || data.focus?.topic?.slug || data.topics?.[0]?.slug || "";
+
+    const state = {
+      mode: "network",
+      zoom: 0.82,
+      pan: { x: 120, y: 92 },
+      selected: focusSlug,
+      hover: "",
+      layout: {},
+      locating: "",
+      inspectorOpen: false,
+      streamOpen: false,
+      activeDoc: { slug: "", kind: "" },
+      docReturnWidth: null,
+      drag: null,
+      resize: null
+    };
+
+    const els = {
+      app: document.getElementById("app"),
+      viewport: document.getElementById("map-viewport"),
+      canvas: document.getElementById("relation-canvas"),
+      nodeLayer: document.getElementById("node-layer"),
+      hover: document.getElementById("hover-card"),
+      inspector: document.getElementById("inspector"),
+      reader: document.getElementById("reader"),
+      readerTitle: document.getElementById("reader-title"),
+      readerSubtitle: document.getElementById("reader-subtitle"),
+      readerBody: document.getElementById("reader-body"),
+      cornerStyle: document.getElementById("corner-style")
+    };
+
+    const ctx = els.canvas.getContext("2d");
+    const topics = data.topics || [];
+    const topicMap = new Map(topics.map((topic) => [topic.slug, topic]));
+    const edges = data.graph?.edges || [];
+    const routeOrder = data.graph?.route_order?.length ? data.graph.route_order : topics.map((topic) => topic.slug);
+    const routeIndexMap = new Map(routeOrder.map((slug, index) => [slug, index]));
+    const world = { width: 1120, height: 760 };
+    const degreeMap = new Map(topics.map((topic) => [topic.slug, 0]));
+    edges.forEach((edge) => {
+      degreeMap.set(edge.source, (degreeMap.get(edge.source) || 0) + 1);
+      degreeMap.set(edge.target, (degreeMap.get(edge.target) || 0) + 1);
+    });
+    const focusNeighbors = [...new Set(edges
+      .filter((edge) => edge.source === focusSlug || edge.target === focusSlug)
+      .map((edge) => edge.source === focusSlug ? edge.target : edge.source)
+      .filter(Boolean))]
+      .sort((a, b) => (degreeMap.get(b) || 0) - (degreeMap.get(a) || 0) || a.localeCompare(b, "zh-Hans-CN"));
+
+    function loadDocsData() {
+      if (!docsCache) {
+        docsCache = JSON.parse(document.getElementById("dashboard-docs").textContent || "{}");
+      }
+      return docsCache;
+    }
+
+    function topicDocuments(slug) {
+      return loadDocsData().topics?.[slug]?.documents || {};
+    }
+
+    function topicAttachment(slug, rel) {
+      return (loadDocsData().topics?.[slug]?.attachments || []).find((item) => item.rel === rel);
+    }
+
+    function globalDocument(kind) {
+      return loadDocsData().documents?.[kind] || null;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function inlineMarkdown(value) {
+      return escapeHtml(value)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, slug, label) => `<strong>${escapeHtml(label || slug)}</strong>`);
+    }
+
+    function renderMarkdown(markdown) {
+      let text = String(markdown || "").replace(/<!--[\s\S]*?-->/g, "").trim();
+      if (text.startsWith("---")) text = text.replace(/^---[\s\S]*?---\s*/, "");
+      const lines = text.split(/\r?\n/);
+      let html = "";
+      let inCode = false;
+      let listOpen = false;
+      for (const raw of lines) {
+        const line = raw.replace(/\t/g, "  ");
+        const trimmed = line.trim();
+        if (trimmed.startsWith("```")) {
+          if (inCode) {
+            html += "</code></pre>";
+            inCode = false;
+          } else {
+            if (listOpen) { html += "</ul>"; listOpen = false; }
+            html += "<pre><code>";
+            inCode = true;
+          }
+          continue;
+        }
+        if (inCode) {
+          html += `${escapeHtml(line)}\n`;
+          continue;
+        }
+        if (!trimmed) {
+          if (listOpen) { html += "</ul>"; listOpen = false; }
+          continue;
+        }
+        const heading = trimmed.match(/^(#{1,4})\s+(.+)$/);
+        if (heading) {
+          if (listOpen) { html += "</ul>"; listOpen = false; }
+          const level = Math.min(heading[1].length, 3);
+          html += `<h${level}>${inlineMarkdown(heading[2])}</h${level}>`;
+          continue;
+        }
+        const bullet = trimmed.match(/^[-*]\s+(.+)$/);
+        if (bullet) {
+          if (!listOpen) { html += "<ul>"; listOpen = true; }
+          html += `<li>${inlineMarkdown(bullet[1])}</li>`;
+          continue;
+        }
+        if (trimmed.startsWith(">")) {
+          if (listOpen) { html += "</ul>"; listOpen = false; }
+          html += `<blockquote>${inlineMarkdown(trimmed.replace(/^>\s?/, ""))}</blockquote>`;
+          continue;
+        }
+        if (listOpen) { html += "</ul>"; listOpen = false; }
+        html += `<p>${inlineMarkdown(trimmed)}</p>`;
+      }
+      if (inCode) html += "</code></pre>";
+      if (listOpen) html += "</ul>";
+      return html || '<div class="empty">暂无可渲染内容。</div>';
+    }
+
+    function statusClass(icon) {
+      if (icon === "✅") return "chip-green";
+      if (icon === "📦") return "chip-blue";
+      if (icon === "⚠️" || icon === "⚠") return "chip-red";
+      if (icon === "⏳") return "chip-cyan";
+      return "chip-amber";
+    }
+
+    function relationClass(kind) {
+      return kind === "parent" ? "parent" : kind === "link" ? "link" : kind === "route" ? "route" : "cluster";
+    }
+
+    function modeLabel(mode) {
+      return {
+        network: "引用关系",
+        tree: "父子关系",
+        route: "讨论推进"
+      }[mode] || mode;
+    }
+
+    function modeDescription(mode) {
+      return {
+        network: "[[引用]] 连接为主，显示话题之间的显式勾连",
+        tree: "parent 字段为主，父话题在上，子话题向下展开",
+        route: "项目流水为主，显示先讨论哪个话题、后讨论哪个话题"
+      }[mode] || "";
+    }
+
+    function layoutKey() {
+      return `jiacong-dashboard-layout:${data.project_root}:${state.mode}`;
+    }
+
+    function cornerStyleKey() {
+      return `jiacong-dashboard-corners:${data.project_root}`;
+    }
+
+    function applyCornerStyle(value) {
+      const next = value === "soft" ? "soft" : "sharp";
+      document.body.classList.toggle("corner-sharp", next === "sharp");
+      if (els.cornerStyle) els.cornerStyle.value = next;
+      localStorage.setItem(cornerStyleKey(), next);
+    }
+
+    function loadCornerStyle() {
+      applyCornerStyle(localStorage.getItem(cornerStyleKey()) || "sharp");
+    }
+
+    function loadLayout() {
+      try {
+        state.layout = JSON.parse(localStorage.getItem(layoutKey()) || "{}");
+      } catch {
+        state.layout = {};
+      }
+    }
+
+    function saveLayout() {
+      localStorage.setItem(layoutKey(), JSON.stringify(state.layout));
+    }
+
+    function inspectorWidthKey() {
+      return `jiacong-dashboard-inspector:${data.project_root}`;
+    }
+
+    function inspectorWidthLimit() {
+      if (window.innerWidth <= 1100) return { min: 320, max: 320 };
+      return { min: 320, max: Math.min(760, Math.max(360, window.innerWidth - 680)) };
+    }
+
+    function setInspectorWidth(width, options = {}) {
+      const limit = inspectorWidthLimit();
+      const next = Math.max(limit.min, Math.min(limit.max, Math.round(width)));
+      els.app.style.setProperty("--inspector-width", `${next}px`);
+      if (options.persist && window.innerWidth > 1100) localStorage.setItem(inspectorWidthKey(), String(next));
+      return next;
+    }
+
+    function getInspectorWidth() {
+      const raw = getComputedStyle(els.app).getPropertyValue("--inspector-width").trim();
+      return Number.parseFloat(raw) || 340;
+    }
+
+    function loadInspectorWidth() {
+      const saved = Number.parseFloat(localStorage.getItem(inspectorWidthKey()) || "");
+      setInspectorWidth(Number.isFinite(saved) ? saved : 340);
+    }
+
+    function ensureInspectorWidth(minWidth) {
+      if (window.innerWidth <= 1100) return;
+      if (getInspectorWidth() < minWidth) setInspectorWidth(minWidth);
+    }
+
+    function expandInspectorForDoc() {
+      if (window.innerWidth <= 1100) return;
+      state.docReturnWidth = getInspectorWidth();
+      ensureInspectorWidth(560);
+    }
+
+    function restoreInspectorAfterDoc() {
+      if (Number.isFinite(state.docReturnWidth)) setInspectorWidth(state.docReturnWidth);
+      state.docReturnWidth = null;
+    }
+
+    function basePosition(topic, index) {
+      if (state.mode === "route") return routePosition(topic, index);
+      if (state.mode === "tree") return treePosition(topic, index);
+      return networkPosition(topic, index);
+    }
+
+    function routePosition(topic, index) {
+      const routeIndex = routeIndexMap.has(topic.slug) ? routeIndexMap.get(topic.slug) : index;
+      const cols = 4;
+      const col = routeIndex % cols;
+      const row = Math.floor(routeIndex / cols);
+      const reverse = row % 2 === 1;
+      return {
+        x: 220 + (reverse ? cols - 1 - col : col) * 220,
+        y: 150 + row * 150 + (col % 2) * 24
+      };
+    }
+
+    function treePosition(topic, index) {
+      const layout = computeTreeLayout();
+      return layout.get(topic.slug) || routePosition(topic, index);
+    }
+
+    function topicOrder(a, b) {
+      const ai = routeIndexMap.has(a.slug) ? routeIndexMap.get(a.slug) : Number.MAX_SAFE_INTEGER;
+      const bi = routeIndexMap.has(b.slug) ? routeIndexMap.get(b.slug) : Number.MAX_SAFE_INTEGER;
+      return ai - bi || a.short_id.localeCompare(b.short_id, "zh-Hans-CN");
+    }
+
+    function computeTreeLayout() {
+      const childrenByParent = new Map(topics.map((topic) => [topic.slug, []]));
+      topics.forEach((topic) => {
+        if (topic.parent && topicMap.has(topic.parent)) childrenByParent.get(topic.parent)?.push(topic);
+      });
+      childrenByParent.forEach((children) => children.sort(topicOrder));
+
+      const layout = new Map();
+      const measured = new Map();
+      const measure = (topic, stack = new Set()) => {
+        if (measured.has(topic.slug)) return measured.get(topic.slug);
+        if (stack.has(topic.slug)) return 190;
+        stack.add(topic.slug);
+        const children = childrenByParent.get(topic.slug) || [];
+        const span = children.length
+          ? Math.max(220, children.reduce((sum, child) => sum + measure(child, stack), 0))
+          : 190;
+        stack.delete(topic.slug);
+        measured.set(topic.slug, span);
+        return span;
+      };
+
+      const placeSubtree = (topic, left, top, depth, stack = new Set()) => {
+        if (stack.has(topic.slug)) return;
+        stack.add(topic.slug);
+        const span = measure(topic);
+        layout.set(topic.slug, { x: left + span / 2, y: top + depth * 148 });
+        const children = childrenByParent.get(topic.slug) || [];
+        let childLeft = left;
+        children.forEach((child) => {
+          const childSpan = measure(child);
+          placeSubtree(child, childLeft, top, depth + 1, stack);
+          childLeft += childSpan;
+        });
+        stack.delete(topic.slug);
+      };
+
+      const ordered = [...topics].sort(topicOrder);
+      const treeRoots = ordered.filter((topic) => !topic.parent && (childrenByParent.get(topic.slug) || []).length);
+      let cursorX = 170;
+      let cursorY = 132;
+      treeRoots.forEach((root) => {
+        const span = measure(root);
+        if (cursorX > 170 && cursorX + span > 1020) {
+          cursorX = 170;
+          cursorY += 306;
+        }
+        placeSubtree(root, cursorX, cursorY, 0);
+        cursorX += span + 74;
+      });
+
+      const solo = ordered.filter((topic) => !layout.has(topic.slug));
+      const cols = 5;
+      const startY = treeRoots.length ? cursorY + 228 : 150;
+      solo.forEach((topic, soloIndex) => {
+        layout.set(topic.slug, {
+          x: 180 + (soloIndex % cols) * 190,
+          y: startY + Math.floor(soloIndex / cols) * 118
+        });
+      });
+      return layout;
+    }
+
+    function networkPosition(topic, index) {
+      if (topic.slug === focusSlug) return { x: 830, y: 255 };
+      const neighborIndex = focusNeighbors.indexOf(topic.slug);
+      const neighborSlots = [
+        { x: 680, y: 205 },
+        { x: 620, y: 335 },
+        { x: 760, y: 440 },
+        { x: 930, y: 410 },
+        { x: 540, y: 490 },
+        { x: 880, y: 150 }
+      ];
+      if (neighborIndex >= 0) return neighborSlots[neighborIndex % neighborSlots.length];
+
+      const remaining = topics
+        .filter((item) => item.slug !== focusSlug && !focusNeighbors.includes(item.slug))
+        .sort((a, b) => (degreeMap.get(b.slug) || 0) - (degreeMap.get(a.slug) || 0) || a.short_id.localeCompare(b.short_id));
+      const orderedIndex = Math.max(0, remaining.findIndex((item) => item.slug === topic.slug));
+      const outerSlots = [
+        { x: 320, y: 250 },
+        { x: 440, y: 520 },
+        { x: 900, y: 545 },
+        { x: 510, y: 160 },
+        { x: 700, y: 575 },
+        { x: 300, y: 460 },
+        { x: 1030, y: 270 },
+        { x: 560, y: 635 },
+        { x: 215, y: 350 },
+        { x: 1030, y: 520 }
+      ];
+      return outerSlots[orderedIndex % outerSlots.length];
+    }
+
+    function topicPosition(topic, index) {
+      const override = state.layout[topic.slug];
+      if (override && Number.isFinite(override.x) && Number.isFinite(override.y)) return override;
+      return basePosition(topic, index);
+    }
+
+    function screenPoint(point) {
+      return { x: point.x * state.zoom + state.pan.x, y: point.y * state.zoom + state.pan.y };
+    }
+
+    function worldPoint(point) {
+      return { x: (point.x - state.pan.x) / state.zoom, y: (point.y - state.pan.y) / state.zoom };
+    }
+
+    function edgeVisible(edge) {
+      if (state.mode === "tree") return edge.kind === "parent" || (edge.kind === "link" && (edge.source === state.selected || edge.target === state.selected));
+      if (state.mode === "route") return edge.kind === "route" || edge.kind === "parent" || edge.kind === "link";
+      return edge.kind !== "route" || edge.source === state.selected || edge.target === state.selected;
+    }
+
+    function resizeCanvas() {
+      const rect = els.viewport.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      els.canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      els.canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      els.canvas.style.width = `${rect.width}px`;
+      els.canvas.style.height = `${rect.height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function drawEdges() {
+      const rect = els.viewport.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      const pos = new Map(topics.map((topic, index) => [topic.slug, screenPoint(topicPosition(topic, index))]));
+      const visible = edges.filter(edgeVisible);
+      visible.forEach((edge) => {
+        const a = pos.get(edge.source);
+        const b = pos.get(edge.target);
+        if (!a || !b) return;
+        const active = edge.source === state.selected || edge.target === state.selected;
+        const focus = edge.source === focusSlug || edge.target === focusSlug;
+        if (state.mode === "tree" && edge.kind === "parent") {
+          const start = { x: a.x, y: a.y + 31 * state.zoom };
+          const end = { x: b.x, y: b.y - 31 * state.zoom };
+          const elbowY = start.y + (end.y - start.y) * 0.52;
+          ctx.beginPath();
+          ctx.moveTo(start.x, start.y);
+          ctx.lineTo(start.x, elbowY);
+          ctx.lineTo(end.x, elbowY);
+          ctx.lineTo(end.x, end.y);
+          ctx.lineWidth = active ? 2.6 : focus ? 2 : 1.35;
+          ctx.strokeStyle = `rgba(44, 125, 120, ${active ? 0.92 : 0.58})`;
+          ctx.setLineDash([]);
+          ctx.stroke();
+          ctx.save();
+          ctx.translate(end.x, end.y);
+          ctx.rotate(Math.atan2(end.y - elbowY, 0));
+          ctx.fillStyle = `rgba(32, 104, 100, ${active ? 0.82 : 0.52})`;
+          ctx.beginPath();
+          ctx.moveTo(5.5, 0);
+          ctx.lineTo(-3.5, -3.2);
+          ctx.lineTo(-3.5, 3.2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+          if (active && state.zoom > 0.58) {
+            ctx.fillStyle = "rgba(32, 104, 100, 0.78)";
+            ctx.font = "11px Cascadia Mono, Consolas, monospace";
+            ctx.fillText("父 → 子", (start.x + end.x) / 2 + 6, elbowY - 7);
+          }
+          return;
+        }
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        const mx = (a.x + b.x) / 2;
+        const my = (a.y + b.y) / 2;
+        const curve = edge.kind === "route" ? 20 : edge.kind === "link" ? -28 : 0;
+        ctx.quadraticCurveTo(mx, my + curve, b.x, b.y);
+        ctx.lineWidth = active ? 2.4 : focus ? 1.8 : 1.15;
+        ctx.strokeStyle = edge.kind === "parent"
+          ? `rgba(44, 125, 120, ${active ? 0.92 : 0.54})`
+          : edge.kind === "link"
+            ? `rgba(207, 123, 54, ${active ? 0.88 : 0.50})`
+            : edge.kind === "cluster"
+              ? `rgba(83, 119, 184, ${active ? 0.64 : 0.25})`
+              : `rgba(111, 121, 109, ${active ? 0.72 : 0.34})`;
+        ctx.setLineDash(edge.kind === "link" ? [7, 7] : edge.kind === "route" ? [1, 7] : []);
+        ctx.stroke();
+        if (edge.kind === "route") {
+          const t = 0.62;
+          const cx = mx;
+          const cy = my + curve;
+          const qx = (1 - t) * (1 - t) * a.x + 2 * (1 - t) * t * cx + t * t * b.x;
+          const qy = (1 - t) * (1 - t) * a.y + 2 * (1 - t) * t * cy + t * t * b.y;
+          const tx = 2 * (1 - t) * (cx - a.x) + 2 * t * (b.x - cx);
+          const ty = 2 * (1 - t) * (cy - a.y) + 2 * t * (b.y - cy);
+          ctx.save();
+          ctx.translate(qx, qy);
+          ctx.rotate(Math.atan2(ty, tx));
+          ctx.fillStyle = `rgba(92, 83, 67, ${active ? 0.78 : 0.42})`;
+          ctx.beginPath();
+          ctx.moveTo(6, 0);
+          ctx.lineTo(-4, -3.5);
+          ctx.lineTo(-4, 3.5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+        if (active && state.zoom > 0.58) {
+          ctx.setLineDash([]);
+          ctx.fillStyle = "rgba(92, 83, 67, 0.78)";
+          ctx.font = "11px Cascadia Mono, Consolas, monospace";
+          ctx.fillText(edge.label, mx + 5, my + curve - 5);
+        }
+      });
+      ctx.restore();
+    }
+
+    function renderNodes() {
+      const html = topics.map((topic, index) => {
+        const p = screenPoint(topicPosition(topic, index));
+        const selected = topic.slug === state.selected;
+        const focus = topic.slug === focusSlug;
+        const locating = topic.slug === state.locating;
+        return `<button class="topic-node ${selected ? "is-selected" : ""} ${focus ? "is-focus" : ""} ${locating ? "is-locating" : ""}" type="button"
+          data-topic="${escapeHtml(topic.slug)}"
+          style="left: ${Math.round(p.x)}px; top: ${Math.round(p.y)}px; transform: translate(-50%, -50%) scale(${state.zoom.toFixed(3)});">
+          <span class="node-id">${escapeHtml(topic.short_id)}</span>
+          <span class="node-copy"><strong>${escapeHtml(topic.title)}</strong><span>${escapeHtml(topic.root || "未归类")} · ${escapeHtml(topic.status_label)}</span></span>
+        </button>`;
+      }).join("");
+      els.nodeLayer.innerHTML = html;
+    }
+
+    function syncPanels() {
+      els.app.classList.toggle("has-inspector", state.inspectorOpen);
+      els.app.classList.toggle("has-stream", state.streamOpen);
+      els.app.classList.toggle("has-doc", Boolean(state.activeDoc.kind));
+      document.querySelectorAll("[data-toggle-panel]").forEach((button) => {
+        const panel = button.dataset.togglePanel;
+        const active = panel === "stream" ? state.streamOpen : false;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-expanded", active ? "true" : "false");
+      });
+    }
+
+    function openPanel(panel, options = {}) {
+      hideHover();
+      if (panel === "inspector") state.inspectorOpen = true;
+      if (panel === "stream") {
+        state.streamOpen = true;
+      }
+      syncPanels();
+      if (options.locateSlug) locateTopic(options.locateSlug, { ensureReadable: true, pulse: options.pulse !== false });
+      renderMap();
+    }
+
+    function closePanel(panel) {
+      hideHover();
+      if (panel === "inspector") {
+        state.inspectorOpen = false;
+        restoreInspectorAfterDoc();
+        state.activeDoc = { slug: "", kind: "" };
+      }
+      if (panel === "stream") state.streamOpen = false;
+      syncPanels();
+      renderMap();
+    }
+
+    function selectTopic(slug, options = {}) {
+      const topic = topicMap.get(slug);
+      if (!topic) return false;
+      hideHover();
+      if (state.selected !== slug) {
+        restoreInspectorAfterDoc();
+        state.activeDoc = { slug: "", kind: "" };
+      }
+      state.selected = slug;
+      if (options.openInspector !== false) state.inspectorOpen = true;
+      return true;
+    }
+
+    function topicViewportPoint(slug) {
+      const node = [...els.nodeLayer.querySelectorAll("[data-topic]")].find((item) => item.dataset.topic === slug);
+      if (!node) return null;
+      const nodeRect = node.getBoundingClientRect();
+      const viewportRect = els.viewport.getBoundingClientRect();
+      return {
+        x: nodeRect.left + nodeRect.width / 2 - viewportRect.left,
+        y: nodeRect.top + nodeRect.height / 2 - viewportRect.top
+      };
+    }
+
+    function preserveTopicViewportPoint(slug, before) {
+      if (!before) return;
+      const after = topicViewportPoint(slug);
+      if (!after) return;
+      const dx = before.x - after.x;
+      const dy = before.y - after.y;
+      if (Math.abs(dx) + Math.abs(dy) < 1) return;
+      state.pan.x += dx;
+      state.pan.y += dy;
+      renderMap();
+    }
+
+    function togglePanel(panel, options = {}) {
+      const open = panel === "stream" ? state.streamOpen : false;
+      if (open) closePanel(panel);
+      else openPanel(panel, options);
+    }
+
+    function renderMap() {
+      syncPanels();
+      resizeCanvas();
+      drawEdges();
+      renderNodes();
+      renderInspector();
+      renderStream();
+      updateMetrics();
+      document.querySelectorAll("[data-mode], [data-rail-mode]").forEach((button) => {
+        button.classList.toggle("is-active", (button.dataset.mode || button.dataset.railMode) === state.mode);
+      });
+    }
+
+    function updateMetrics() {
+      const selectedTopic = topicMap.get(state.selected);
+      const focusTopic = topicMap.get(focusSlug);
+      const watcherLive = data.workspace?.watcher_summary?.live || 0;
+      const warnings = data.warnings?.length || 0;
+      const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      };
+      setText("chip-focus", `焦点 ${focusTopic ? focusTopic.short_id : "-"}`);
+      setText("stream-count-value", `${(data.timeline || []).length || 0}`);
+      setText("chip-refs", `引用关系 ${data.graph?.summary?.link_edges || 0}`);
+      setText("chip-tree", `父子关系 ${data.graph?.summary?.parent_edges || 0}`);
+      setText("chip-watcher", warnings ? `机制告警 ${warnings}` : `监听 ${watcherLive || 0}`);
+      setText("workspace-subtitle", `当前 ${selectedTopic ? `${selectedTopic.short_id} · ${selectedTopic.title}` : "未选择"} · ${edges.length} 条关系 · {{ generated_at }}`);
+      setText("map-heading", modeLabel(state.mode));
+      setText("zoom-label", `${Math.round(state.zoom * 100)}%`);
+      setText("map-subtitle", `${modeLabel(state.mode)} · 缩放 ${Math.round(state.zoom * 100)}% · ${modeDescription(state.mode)}`);
+      const watcherChip = document.getElementById("chip-watcher");
+      if (watcherChip) watcherChip.className = `chip ${warnings ? "chip-red" : watcherLive ? "chip-green" : "chip-amber"}`;
+    }
+
+    function topicLabel(slug) {
+      const target = topicMap.get(slug);
+      return target ? `${target.short_id} · ${target.title}` : "无";
+    }
+
+    function taskListPreview(tasks) {
+      if (!tasks.length) return '<div class="empty">暂无任务。</div>';
+      return `<ul class="hover-task-list">${tasks.map((task) => `
+        <li class="hover-task">
+          <span class="hover-task-check">${escapeHtml(task.status_icon || "□")}</span>
+          <span>
+            <strong>${escapeHtml(task.id)} · ${escapeHtml(task.title || "未命名任务")}</strong>
+            <small>${escapeHtml(task.status_label || "未标记")}</small>
+          </span>
+        </li>`).join("")}</ul>`;
+    }
+
+    function showHover(slug, clientX, clientY) {
+      const topic = topicMap.get(slug);
+      if (!topic) return;
+      const primarySection = (topic.sections || [])[0] || {};
+      const latestScratch = (topic.scratch_entries || [])[0] || {};
+      const previewTasks = (topic.tasks || []).slice(0, 4);
+      const docUpdated = topic.documents?.card?.updated || topic.updated || topic.created || "未知";
+      const directRelationCount = (topic.parent ? 1 : 0) + (topic.children || []).length + (topic.links || []).length;
+      const relationCount = degreeMap.get(slug) || directRelationCount;
+      const taskOpen = (topic.tasks || []).filter((task) => !["✅", "📦"].includes(task.status_icon)).length;
+      els.hover.innerHTML = `
+        <div class="hover-head">
+          <span class="hover-kicker">${escapeHtml(topic.short_id)}</span>
+          <h3>${escapeHtml(topic.title)}</h3>
+          <div class="chip-row">
+            <span class="chip ${statusClass(topic.status_icon)}">${escapeHtml(topic.status_icon)} ${escapeHtml(topic.status_label)}</span>
+            <span class="chip chip-blue">${escapeHtml(topic.root || "未归类")}</span>
+            <span class="chip chip-hot">Card ${escapeHtml(docUpdated)}</span>
+          </div>
+        </div>
+        <div class="hover-facts">
+          <div class="hover-fact"><span>父级</span><strong>${escapeHtml(topic.parent ? topicLabel(topic.parent) : "无")}</strong></div>
+          <div class="hover-fact"><span>关系</span><strong>${escapeHtml(relationCount)}</strong></div>
+          <div class="hover-fact"><span>任务</span><strong>${escapeHtml(taskOpen)}</strong></div>
+        </div>
+        <div class="hover-sections">
+          <section class="hover-section">
+            <span class="hover-preview-label">Card 摘要</span>
+            <h4>${escapeHtml(primarySection.title || "概要")}</h4>
+            <p>${escapeHtml(primarySection.preview || topic.preview || "暂无预览")}</p>
+          </section>
+          <section class="hover-section">
+            <span class="hover-preview-label">Scratch 最新</span>
+            <h4>${escapeHtml(latestScratch.title || "暂无记录")}</h4>
+            <p>${escapeHtml(latestScratch.preview ? `${latestScratch.time || ""} · ${latestScratch.preview}` : "暂无过程记录")}</p>
+          </section>
+          <section class="hover-section">
+            <span class="hover-preview-label">Tasks 清单</span>
+            ${taskListPreview(previewTasks)}
+          </section>
+        </div>`;
+      els.hover.classList.add("is-visible");
+      els.hover.style.left = "0px";
+      els.hover.style.top = "0px";
+      const rect = els.hover.getBoundingClientRect();
+      const margin = 12;
+      let left = clientX + 16;
+      let top = clientY + 16;
+      if (left + rect.width + margin > window.innerWidth) left = clientX - rect.width - 16;
+      if (top + rect.height + margin > window.innerHeight) top = clientY - rect.height - 16;
+      left = Math.max(margin, Math.min(left, window.innerWidth - rect.width - margin));
+      top = Math.max(margin, Math.min(top, window.innerHeight - rect.height - margin));
+      els.hover.style.left = `${Math.round(left)}px`;
+      els.hover.style.top = `${Math.round(top)}px`;
+    }
+
+    function hideHover() {
+      els.hover.classList.remove("is-visible");
+    }
+
+    function renderInspector() {
+      const topic = topicMap.get(state.selected) || topics[0];
+      if (!topic) {
+        els.inspector.innerHTML = `<div class="empty">暂无话题。</div>`;
+        return;
+      }
+      const related = [...new Set([topic.parent, ...(topic.children || []), ...(topic.links || [])].filter(Boolean))];
+      const activeDoc = state.activeDoc.slug === topic.slug ? state.activeDoc.kind : "";
+      const activeDocBody = activeDoc ? (topicDocuments(topic.slug)[activeDoc] || "") : "";
+      const docPanel = activeDoc ? `
+        <section class="doc-panel">
+          <div class="doc-panel-header">
+            <h3>${escapeHtml(topic.short_id)} · ${escapeHtml(topic.title)} / ${escapeHtml(docKindLabel(activeDoc))}</h3>
+          </div>
+          <div class="doc-panel-body">
+            <div class="markdown">${renderMarkdown(activeDocBody)}</div>
+          </div>
+        </section>` : "";
+      els.inspector.innerHTML = `
+        <button class="splitter-handle" type="button" data-resize-inspector aria-label="调整关系图与右侧面板宽度" title="调整关系图与右侧面板宽度"></button>
+        <div class="inspector-header">
+          <div>
+            <h2>${escapeHtml(topic.short_id)} · ${escapeHtml(topic.title)}</h2>
+            <div class="chip-row">
+              <span class="chip ${statusClass(topic.status_icon)}">${escapeHtml(topic.status_icon)} ${escapeHtml(topic.status_label)}</span>
+              <span class="chip chip-blue">${escapeHtml(topic.root || "未归类")}</span>
+              <span class="chip chip-hot">更新 ${escapeHtml(topic.updated || "未知")}</span>
+            </div>
+          </div>
+          <div class="inspector-actions">
+            <button class="chip-button" type="button" data-focus-selected title="聚焦到当前选中的话题卡">聚焦</button>
+            <button class="panel-close" type="button" data-close-panel="inspector">×</button>
+          </div>
+        </div>
+        <div class="doc-actions">
+          <button class="doc-button ${activeDoc === "card" ? "is-active" : ""}" type="button" data-toggle-doc="${escapeHtml(topic.slug)}" data-kind="card" aria-expanded="${activeDoc === "card" ? "true" : "false"}">Card</button>
+          <button class="doc-button ${activeDoc === "scratch" ? "is-active" : ""}" type="button" data-toggle-doc="${escapeHtml(topic.slug)}" data-kind="scratch" aria-expanded="${activeDoc === "scratch" ? "true" : "false"}">Scratch</button>
+          <button class="doc-button ${activeDoc === "tasks" ? "is-active" : ""}" type="button" data-toggle-doc="${escapeHtml(topic.slug)}" data-kind="tasks" aria-expanded="${activeDoc === "tasks" ? "true" : "false"}">Tasks</button>
+        </div>
+        ${docPanel}
+        <div class="inspector-body">
+          <section class="block">
+            <h3>关系</h3>
+            <div class="chip-row">
+              ${related.map((slug) => {
+                const target = topicMap.get(slug);
+                return target ? `<button class="chip-button" type="button" data-select-topic="${escapeHtml(slug)}">${escapeHtml(target.short_id)} · ${escapeHtml(target.title)}</button>` : "";
+              }).join("") || '<span class="chip">暂无显式关系</span>'}
+            </div>
+          </section>
+          <section class="block">
+            <h3>Card 摘要</h3>
+            <ul class="list">${(topic.sections || []).map((section) => `<li class="list-item"><strong>${escapeHtml(section.title)}</strong><p>${escapeHtml(section.preview)}</p></li>`).join("") || '<li class="empty">暂无 card 摘要。</li>'}</ul>
+          </section>
+          <section class="block">
+            <h3>近期 Scratch</h3>
+            <ul class="list">${(topic.scratch_entries || []).map((entry) => `<li class="list-item"><strong>${escapeHtml(entry.title)}</strong><p>${escapeHtml(entry.time)} · ${escapeHtml(entry.preview)}</p></li>`).join("") || '<li class="empty">暂无 scratch。</li>'}</ul>
+          </section>
+          <section class="block">
+            <h3>任务</h3>
+            <ul class="list">${(topic.tasks || []).slice(0, 8).map((task) => `<li class="list-item"><strong>${escapeHtml(task.id)} ${escapeHtml(task.title)}</strong><p>${escapeHtml(task.status_label)} · ${escapeHtml(task.description || "无说明")}</p></li>`).join("") || '<li class="empty">暂无任务。</li>'}</ul>
+          </section>
+          <section class="block">
+            <h3>附件</h3>
+            <ul class="list">${(topic.attachments || []).map((item) => `<li class="list-item"><strong>${escapeHtml(item.name)}</strong><p>${escapeHtml(item.updated)} · ${escapeHtml(item.size)} bytes ${item.readable ? `· <button class="chip-button" type="button" data-open-attachment="${escapeHtml(topic.slug)}" data-rel="${escapeHtml(item.rel)}">阅读</button>` : ""}</p></li>`).join("") || '<li class="empty">暂无附件。</li>'}</ul>
+          </section>
+        </div>`;
+    }
+
+    function renderStream() {
+      document.getElementById("stream-preview").textContent = data.stream_preview || "暂无流水摘要。";
+      const items = (data.timeline || []).slice(0, 12);
+      document.getElementById("timeline").innerHTML = items.map((item) => `<div class="timeline-item ${escapeHtml(item.kind_class || "")}">
+        <div class="timeline-kind">${escapeHtml(item.time || item.t || "")}<br>${escapeHtml(item.kind || "事件")}</div>
+        <div>
+          <strong class="timeline-title">${escapeHtml(item.title || item.event || "")}</strong>
+          <p class="timeline-detail">${escapeHtml(item.detail || "")}</p>
+        </div>
+      </div>`).join("") || '<div class="timeline-item">暂无事件。</div>';
+    }
+
+    function openReader(title, subtitle, body) {
+      els.readerTitle.textContent = title;
+      els.readerSubtitle.textContent = subtitle || "";
+      els.readerBody.innerHTML = renderMarkdown(body || "");
+      els.reader.classList.add("is-open");
+    }
+
+    function closeReader() {
+      els.reader.classList.remove("is-open");
+    }
+
+    function docKindLabel(kind) {
+      return kind === "card" ? "Card" : kind === "scratch" ? "Scratch" : kind === "tasks" ? "Tasks" : kind;
+    }
+
+    function toggleTopicDoc(slug, kind) {
+      hideHover();
+      const same = state.activeDoc.slug === slug && state.activeDoc.kind === kind;
+      const hadDoc = Boolean(state.activeDoc.kind);
+      state.activeDoc = same ? { slug: "", kind: "" } : { slug, kind };
+      state.selected = slug;
+      state.inspectorOpen = true;
+      if (same) restoreInspectorAfterDoc();
+      else if (!hadDoc) expandInspectorForDoc();
+      renderMap();
+    }
+
+    function openTopicDoc(slug, kind) {
+      const topic = topicMap.get(slug);
+      if (!topic) return;
+      const docs = topicDocuments(slug);
+      openReader(`${topic.short_id} · ${topic.title} / ${kind}`, topic.slug, docs[kind] || "");
+    }
+
+    function openAttachment(slug, rel) {
+      const topic = topicMap.get(slug);
+      const item = topicAttachment(slug, rel);
+      if (!topic || !item) return;
+      openReader(`${topic.short_id} · ${item.name}`, item.rel, item.body || "");
+    }
+
+    function openGlobalDoc(kind) {
+      const doc = globalDocument(kind);
+      if (!doc) return;
+      openReader(doc.title || kind, "项目文档", doc.body || "");
+    }
+
+    function locateTopic(slug, options = {}) {
+      const topic = topicMap.get(slug);
+      if (!topic) return false;
+      const index = topics.findIndex((item) => item.slug === slug);
+      const rect = els.viewport.getBoundingClientRect();
+      const point = topicPosition(topic, index);
+      if (state.selected !== slug) {
+        restoreInspectorAfterDoc();
+        state.activeDoc = { slug: "", kind: "" };
+      }
+      state.selected = slug;
+      if (options.ensureReadable) state.zoom = Math.max(state.zoom, 0.68);
+      state.pan = {
+        x: rect.width / 2 - point.x * state.zoom,
+        y: rect.height / 2 - point.y * state.zoom
+      };
+      if (options.pulse) {
+        state.locating = slug;
+        window.clearTimeout(locateTopic._timer);
+        locateTopic._timer = window.setTimeout(() => {
+          state.locating = "";
+          renderNodes();
+        }, 820);
+      }
+      return true;
+    }
+
+    function locateFocus(options = {}) {
+      if (!focusSlug) return false;
+      return locateTopic(focusSlug, { ensureReadable: true, pulse: true, ...options });
+    }
+
+    function setMode(mode) {
+      state.mode = mode;
+      loadLayout();
+      fitMap();
+      locateFocus({ pulse: true });
+      renderMap();
+    }
+
+    function fitMap() {
+      const rect = els.viewport.getBoundingClientRect();
+      state.zoom = Math.max(0.44, Math.min(0.95, Math.min(rect.width / world.width, rect.height / world.height) * 1.18));
+      state.pan = { x: (rect.width - world.width * state.zoom) / 2, y: (rect.height - world.height * state.zoom) / 2 };
+    }
+
+    function zoomAt(factor, center) {
+      const before = worldPoint(center);
+      state.zoom = Math.max(0.35, Math.min(1.8, state.zoom * factor));
+      state.pan.x = center.x - before.x * state.zoom;
+      state.pan.y = center.y - before.y * state.zoom;
+      renderMap();
+    }
+
+    function resetLayout() {
+      state.layout = {};
+      localStorage.removeItem(layoutKey());
+      fitMap();
+      renderMap();
+    }
+
+    document.querySelectorAll(".map-shelf, .map-shelf button").forEach((control) => {
+      ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach((type) => {
+        control.addEventListener(type, (event) => event.stopPropagation());
+      });
+    });
+
+    els.viewport.addEventListener("pointerdown", (event) => {
+      const node = event.target.closest("[data-topic]");
+      const rect = els.viewport.getBoundingClientRect();
+      if (node) {
+        const slug = node.dataset.topic;
+        const topic = topicMap.get(slug);
+        const index = topics.findIndex((item) => item.slug === slug);
+        const current = topicPosition(topic, index);
+        const startWorld = worldPoint({ x: event.clientX - rect.left, y: event.clientY - rect.top });
+        state.drag = { dragKind: "node", slug, index, startWorld, startPos: current, moved: false };
+        node.setPointerCapture(event.pointerId);
+        node.classList.add("is-dragging");
+        return;
+      }
+      state.drag = {
+        dragKind: "pan",
+        start: { x: event.clientX, y: event.clientY },
+        pan: { ...state.pan }
+      };
+      els.viewport.classList.add("is-panning");
+      els.viewport.setPointerCapture(event.pointerId);
+    });
+
+    els.viewport.addEventListener("pointermove", (event) => {
+      if (!state.drag) {
+        const node = event.target.closest("[data-topic]");
+        if (node) showHover(node.dataset.topic, event.clientX, event.clientY);
+        return;
+      }
+      const rect = els.viewport.getBoundingClientRect();
+      if (state.drag.dragKind === "pan") {
+        state.pan.x = state.drag.pan.x + event.clientX - state.drag.start.x;
+        state.pan.y = state.drag.pan.y + event.clientY - state.drag.start.y;
+        renderMap();
+      } else {
+        const now = worldPoint({ x: event.clientX - rect.left, y: event.clientY - rect.top });
+        const dx = now.x - state.drag.startWorld.x;
+        const dy = now.y - state.drag.startWorld.y;
+        if (Math.abs(dx) + Math.abs(dy) > 3) state.drag.moved = true;
+        state.layout[state.drag.slug] = { x: state.drag.startPos.x + dx, y: state.drag.startPos.y + dy };
+        renderMap();
+      }
+      hideHover();
+    });
+
+    function endDrag(event) {
+      if (!state.drag) return;
+      if (state.drag.dragKind === "node") {
+        document.querySelectorAll(".topic-node.is-dragging").forEach((node) => node.classList.remove("is-dragging"));
+        if (!state.drag.moved) {
+          const alreadyOpen = state.inspectorOpen && state.selected === state.drag.slug;
+          if (alreadyOpen) closePanel("inspector");
+          else {
+            const before = topicViewportPoint(state.drag.slug);
+            selectTopic(state.drag.slug);
+            renderMap();
+            preserveTopicViewportPoint(state.drag.slug, before);
+          }
+          state.drag = null;
+          els.viewport.classList.remove("is-panning");
+          return;
+        } else {
+          saveLayout();
+        }
+      }
+      state.drag = null;
+      els.viewport.classList.remove("is-panning");
+      renderMap();
+    }
+
+    els.viewport.addEventListener("pointerup", endDrag);
+    els.viewport.addEventListener("pointercancel", endDrag);
+    els.viewport.addEventListener("pointerleave", () => {
+      if (!state.drag) hideHover();
+    });
+    els.viewport.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      const rect = els.viewport.getBoundingClientRect();
+      zoomAt(event.deltaY < 0 ? 1.12 : 0.88, { x: event.clientX - rect.left, y: event.clientY - rect.top });
+    }, { passive: false });
+
+    document.addEventListener("click", (event) => {
+      const mode = event.target.closest("[data-mode]");
+      if (mode) return setMode(mode.dataset.mode);
+      const railMode = event.target.closest("[data-rail-mode]");
+      if (railMode) return setMode(railMode.dataset.railMode);
+      const select = event.target.closest("[data-select-topic]");
+      if (select) {
+        const slug = select.dataset.selectTopic;
+        const before = topicViewportPoint(slug);
+        selectTopic(slug);
+        renderMap();
+        preserveTopicViewportPoint(slug, before);
+        return;
+      }
+      const focusSelected = event.target.closest("[data-focus-selected]");
+      if (focusSelected) {
+        locateTopic(state.selected, { ensureReadable: true, pulse: true });
+        renderMap();
+        return;
+      }
+      const doc = event.target.closest("[data-toggle-doc]");
+      if (doc) return toggleTopicDoc(doc.dataset.toggleDoc, doc.dataset.kind);
+      const global = event.target.closest("[data-open-global]");
+      if (global) return openGlobalDoc(global.dataset.openGlobal);
+      const attachment = event.target.closest("[data-open-attachment]");
+      if (attachment) return openAttachment(attachment.dataset.openAttachment, attachment.dataset.rel);
+      const open = event.target.closest("[data-open-panel]");
+      if (open) return openPanel(open.dataset.openPanel, open.dataset.openPanel === "inspector" ? { locateSlug: state.selected, pulse: true } : {});
+      const toggle = event.target.closest("[data-toggle-panel]");
+      if (toggle) return togglePanel(toggle.dataset.togglePanel);
+      const close = event.target.closest("[data-close-panel]");
+      if (close) return closePanel(close.dataset.closePanel);
+    });
+
+    document.addEventListener("pointerdown", (event) => {
+      const handle = event.target.closest("[data-resize-inspector]");
+      if (!handle || window.innerWidth <= 1100) return;
+      event.preventDefault();
+      event.stopPropagation();
+      state.resize = { pointerId: event.pointerId, startX: event.clientX, startWidth: getInspectorWidth() };
+      handle.setPointerCapture(event.pointerId);
+      els.app.classList.add("is-resizing");
+      hideHover();
+    });
+
+    document.addEventListener("pointermove", (event) => {
+      if (!state.resize) return;
+      event.preventDefault();
+      const delta = state.resize.startX - event.clientX;
+      setInspectorWidth(state.resize.startWidth + delta);
+      renderMap();
+    });
+
+    function endInspectorResize() {
+      if (!state.resize) return;
+      setInspectorWidth(getInspectorWidth(), { persist: true });
+      state.docReturnWidth = null;
+      state.resize = null;
+      els.app.classList.remove("is-resizing");
+      renderMap();
+    }
+
+    document.addEventListener("pointerup", endInspectorResize);
+    document.addEventListener("pointercancel", endInspectorResize);
+
+    document.querySelectorAll("[data-focus-topic]").forEach((button) => button.addEventListener("click", () => {
+      locateFocus({ pulse: true });
+      renderMap();
+    }));
+    if (els.cornerStyle) {
+      els.cornerStyle.addEventListener("change", (event) => applyCornerStyle(event.target.value));
+    }
+    document.getElementById("zoom-in").addEventListener("click", () => zoomAt(1.15, { x: els.viewport.clientWidth / 2, y: els.viewport.clientHeight / 2 }));
+    document.getElementById("zoom-out").addEventListener("click", () => zoomAt(0.85, { x: els.viewport.clientWidth / 2, y: els.viewport.clientHeight / 2 }));
+    document.getElementById("fit-map").addEventListener("click", () => { fitMap(); renderMap(); });
+    document.getElementById("reset-layout").addEventListener("click", resetLayout);
+    document.querySelectorAll("[data-reader-close]").forEach((button) => button.addEventListener("click", closeReader));
+    window.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if (els.reader.classList.contains("is-open")) closeReader();
+      else if (state.streamOpen) closePanel("stream");
+      else if (state.activeDoc.kind) {
+        restoreInspectorAfterDoc();
+        state.activeDoc = { slug: "", kind: "" };
+        renderMap();
+      }
+    });
+    window.addEventListener("resize", () => { setInspectorWidth(getInspectorWidth()); fitMap(); renderMap(); });
+
+    function animateProjection() {
+      const canvas = document.getElementById("projection-canvas");
+      const c = canvas.getContext("2d");
+      let frame = 0;
+      function resize() {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(window.innerWidth * dpr);
+        canvas.height = Math.floor(window.innerHeight * dpr);
+        canvas.style.width = `${window.innerWidth}px`;
+        canvas.style.height = `${window.innerHeight}px`;
+        c.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      resize();
+      window.addEventListener("resize", resize);
+      function draw() {
+        frame += 1;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        c.clearRect(0, 0, w, h);
+        const beam = c.createRadialGradient(w * 0.18, h * 0.06, 20, w * 0.56, h * 0.42, Math.max(w, h) * 0.70);
+        beam.addColorStop(0, `rgba(255, 238, 196, ${0.10 + Math.sin(frame / 42) * 0.018})`);
+        beam.addColorStop(0.48, "rgba(44, 125, 120, 0.035)");
+        beam.addColorStop(1, "rgba(0, 0, 0, 0)");
+        c.fillStyle = beam;
+        c.fillRect(0, 0, w, h);
+        c.save();
+        c.globalCompositeOperation = "multiply";
+        for (let i = 0; i < 28; i += 1) {
+          const x = (i * 97 + frame * (0.45 + (i % 5) * 0.08)) % (w + 180) - 90;
+          const y = (i * 53 + Math.sin(frame / 30 + i) * 26) % (h + 120) - 60;
+          c.fillStyle = i % 3 === 0 ? "rgba(207, 123, 54, 0.035)" : "rgba(44, 125, 120, 0.025)";
+          c.beginPath();
+          c.ellipse(x, y, 1.2 + (i % 4) * 0.7, 0.55, frame / 140 + i, 0, Math.PI * 2);
+          c.fill();
+        }
+        c.restore();
+        c.globalAlpha = 0.055;
+        c.fillStyle = "#496555";
+        for (let y = (frame % 10); y < h; y += 10) c.fillRect(0, y, w, 1);
+        c.globalAlpha = 1;
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    loadCornerStyle();
+    loadInspectorWidth();
+    loadLayout();
+    fitMap();
+    renderMap();
+    animateProjection();
+  </script>
+</body>
+</html>

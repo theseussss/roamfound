@@ -1,0 +1,1871 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>项目控制台 · smarter-project</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f8f9fa;
+      --card: #fff;
+      --accent: #4a90d9;
+      --warn: #e8a838;
+      --error: #d94a4a;
+      --text: #1a1a2e;
+      --muted: #62677d;
+      --line: rgba(26, 26, 46, 0.12);
+      --soft-line: rgba(74, 144, 217, 0.18);
+      --shadow: 0 16px 36px rgba(20, 28, 46, 0.08);
+      --shadow-small: 0 8px 22px rgba(20, 28, 46, 0.07);
+      --header-bg: rgba(255, 255, 255, 0.84);
+      --header-border: rgba(26, 26, 46, 0.1);
+      --panel: rgba(255, 255, 255, 0.72);
+      --focus: rgba(74, 144, 217, 0.28);
+      --green: #2fb56d;
+      --blue: #2f7dd3;
+      --teal: #1b9d8a;
+      --purple: #8b5bd6;
+      --brown: #9b6a32;
+      --grey: #85889a;
+      --dark-grey: #44485a;
+      --radius-card: 8px;
+      --radius-button: 4px;
+      --topbar-height: 132px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #1a1a2e;
+        --card: #2d2d44;
+        --accent: #6ab0f3;
+        --warn: #f0c060;
+        --error: #f06060;
+        --text: #e8e8f0;
+        --muted: #b4b7c8;
+        --line: rgba(232, 232, 240, 0.14);
+        --soft-line: rgba(106, 176, 243, 0.2);
+        --shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+        --shadow-small: 0 10px 24px rgba(0, 0, 0, 0.2);
+        --header-bg: rgba(26, 26, 46, 0.86);
+        --header-border: rgba(232, 232, 240, 0.12);
+        --panel: rgba(45, 45, 68, 0.74);
+        --focus: rgba(106, 176, 243, 0.3);
+        --dark-grey: #9296aa;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #1a1a2e;
+      --card: #2d2d44;
+      --accent: #6ab0f3;
+      --warn: #f0c060;
+      --error: #f06060;
+      --text: #e8e8f0;
+      --muted: #b4b7c8;
+      --line: rgba(232, 232, 240, 0.14);
+      --soft-line: rgba(106, 176, 243, 0.2);
+      --shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+      --shadow-small: 0 10px 24px rgba(0, 0, 0, 0.2);
+      --header-bg: rgba(26, 26, 46, 0.86);
+      --header-border: rgba(232, 232, 240, 0.12);
+      --panel: rgba(45, 45, 68, 0.74);
+      --focus: rgba(106, 176, 243, 0.3);
+      --dark-grey: #9296aa;
+    }
+
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f8f9fa;
+      --card: #fff;
+      --accent: #4a90d9;
+      --warn: #e8a838;
+      --error: #d94a4a;
+      --text: #1a1a2e;
+      --muted: #62677d;
+      --line: rgba(26, 26, 46, 0.12);
+      --soft-line: rgba(74, 144, 217, 0.18);
+      --shadow: 0 16px 36px rgba(20, 28, 46, 0.08);
+      --shadow-small: 0 8px 22px rgba(20, 28, 46, 0.07);
+      --header-bg: rgba(255, 255, 255, 0.84);
+      --header-border: rgba(26, 26, 46, 0.1);
+      --panel: rgba(255, 255, 255, 0.72);
+      --focus: rgba(74, 144, 217, 0.28);
+      --dark-grey: #44485a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 18%, transparent), transparent 34rem),
+        radial-gradient(circle at 78% 10%, color-mix(in srgb, var(--warn) 12%, transparent), transparent 30rem),
+        linear-gradient(135deg, var(--bg), color-mix(in srgb, var(--bg) 82%, var(--accent)));
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      line-height: 1.5;
+    }
+
+    body::before {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      content: "";
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 72%);
+      opacity: 0.34;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    button,
+    [tabindex] {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 0.75rem;
+      left: 0.75rem;
+      z-index: 30;
+      transform: translateY(-150%);
+      border-radius: var(--radius-button);
+      background: var(--accent);
+      color: #fff;
+      padding: 0.55rem 0.75rem;
+      text-decoration: none;
+      transition: transform 0.18s ease;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    .app-header {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 20;
+      border-bottom: 1px solid var(--header-border);
+      background: var(--header-bg);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      max-width: 1280px;
+      min-height: 76px;
+      margin: 0 auto;
+      padding: 0.95rem 1.25rem 0.65rem;
+    }
+
+    .project-mark {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .project-glyph {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid var(--soft-line);
+      border-radius: 14px;
+      background:
+        linear-gradient(145deg, color-mix(in srgb, var(--accent) 18%, var(--card)), var(--card));
+      box-shadow: var(--shadow-small);
+      color: var(--accent);
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .project-title {
+      overflow: hidden;
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(1.05rem, 2vw, 1.4rem);
+      font-weight: 780;
+      letter-spacing: -0.02em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .refresh-meta {
+      margin-top: 0.18rem;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .topbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 0.55rem;
+    }
+
+    .control-button,
+    .tab-button,
+    .link-button,
+    .sort-button {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-button);
+      background: color-mix(in srgb, var(--card) 88%, transparent);
+      cursor: pointer;
+      transition:
+        transform 0.16s ease,
+        border-color 0.16s ease,
+        background 0.16s ease,
+        box-shadow 0.16s ease;
+    }
+
+    .control-button:hover,
+    .tab-button:hover,
+    .link-button:hover,
+    .sort-button:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 12%, transparent);
+    }
+
+    .control-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      min-height: 36px;
+      padding: 0.45rem 0.68rem;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .control-button[aria-pressed="true"] {
+      border-color: color-mix(in srgb, var(--accent) 48%, var(--line));
+      background: color-mix(in srgb, var(--accent) 14%, var(--card));
+    }
+
+    .pulse-dot {
+      width: 0.65rem;
+      height: 0.65rem;
+      border-radius: 999px;
+      background: var(--grey);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    }
+
+    .pulse-dot.is-active {
+      background: var(--green);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 42%, transparent);
+      }
+      70% {
+        box-shadow: 0 0 0 9px transparent;
+      }
+      100% {
+        box-shadow: 0 0 0 0 transparent;
+      }
+    }
+
+    .tabs {
+      display: flex;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 1.25rem 0.85rem;
+      gap: 0.55rem;
+      overflow-x: auto;
+    }
+
+    .tab-button {
+      min-width: 8.5rem;
+      padding: 0.68rem 1rem;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .tab-button[aria-selected="true"] {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 12px 26px color-mix(in srgb, var(--accent) 26%, transparent);
+    }
+
+    .app-shell {
+      width: min(1280px, calc(100% - 2rem));
+      min-height: calc(100vh - var(--topbar-height));
+      margin: 0 auto;
+      padding: calc(var(--topbar-height) + 1.35rem) 0 2.4rem;
+    }
+
+    .panel {
+      animation: panel-in 0.28s ease both;
+    }
+
+    .panel[hidden] {
+      display: none;
+    }
+
+    @keyframes panel-in {
+      from {
+        transform: translateY(10px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .section-stack {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .stat-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 132px;
+      padding: 1.05rem;
+    }
+
+    .stat-card::after {
+      position: absolute;
+      right: -34px;
+      bottom: -48px;
+      width: 130px;
+      height: 130px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 13%, transparent);
+      content: "";
+    }
+
+    .stat-card.is-danger::after {
+      background: color-mix(in srgb, var(--error) 16%, transparent);
+    }
+
+    .stat-card.is-danger {
+      border-color: color-mix(in srgb, var(--error) 42%, var(--line));
+    }
+
+    .stat-card.is-danger .stat-value {
+      color: var(--error);
+    }
+
+    .stat-label {
+      position: relative;
+      z-index: 1;
+      margin: 0 0 0.55rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 850;
+      letter-spacing: -0.04em;
+    }
+
+    .stat-note {
+      position: relative;
+      z-index: 1;
+      margin-top: 0.55rem;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .scratch-counts {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.7rem;
+    }
+
+    .scratch-chip,
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--card) 78%, transparent);
+      color: var(--text);
+      font-size: 0.84rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .scratch-chip {
+      padding: 0.35rem 0.55rem;
+    }
+
+    .status-pill {
+      padding: 0.2rem 0.48rem;
+    }
+
+    .status-blue {
+      color: var(--blue);
+    }
+
+    .status-green {
+      color: var(--green);
+    }
+
+    .status-grey {
+      color: var(--grey);
+    }
+
+    .status-red {
+      color: var(--error);
+    }
+
+    .status-dark-grey {
+      color: var(--dark-grey);
+    }
+
+    .status-purple {
+      color: var(--purple);
+    }
+
+    .status-teal {
+      color: var(--teal);
+    }
+
+    .status-brown {
+      color: var(--brown);
+    }
+
+    .panel-card {
+      padding: 1.05rem;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .section-title h2,
+    .section-title h3 {
+      margin: 0;
+      font-size: 1.02rem;
+      letter-spacing: -0.01em;
+    }
+
+    .section-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 680px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 0.72rem 0.78rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: color-mix(in srgb, var(--accent) 8%, var(--card));
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    tbody tr {
+      transition: background 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    tbody tr[data-topic-slug] {
+      cursor: pointer;
+    }
+
+    tbody tr[data-topic-slug]:hover,
+    tbody tr[data-topic-slug].is-selected {
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+
+    tbody tr[data-topic-slug].is-selected {
+      box-shadow: inset 4px 0 0 var(--accent);
+    }
+
+    .sort-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      padding: 0.1rem 0.2rem;
+      font-weight: 850;
+    }
+
+    .sort-indicator {
+      color: var(--accent);
+      font-size: 0.85rem;
+    }
+
+    .empty-state,
+    .error-state,
+    .loading-state {
+      display: grid;
+      place-items: center;
+      min-height: 220px;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-card);
+      background: color-mix(in srgb, var(--card) 72%, transparent);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .error-state {
+      border-color: color-mix(in srgb, var(--error) 44%, var(--line));
+      color: var(--error);
+    }
+
+    .loading-state {
+      min-height: 380px;
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 1rem;
+      border: 4px solid color-mix(in srgb, var(--accent) 18%, transparent);
+      border-top-color: var(--accent);
+      border-radius: 999px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .warning-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .warning-card {
+      border: 1px solid color-mix(in srgb, var(--warn) 52%, var(--line));
+      border-left: 5px solid var(--warn);
+      border-radius: var(--radius-card);
+      background: color-mix(in srgb, var(--warn) 11%, var(--card));
+      padding: 0.85rem 0.95rem;
+    }
+
+    .warning-card.is-error {
+      border-color: color-mix(in srgb, var(--error) 52%, var(--line));
+      border-left-color: var(--error);
+      background: color-mix(in srgb, var(--error) 10%, var(--card));
+    }
+
+    .warning-card strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .timeline {
+      position: relative;
+      display: grid;
+      gap: 0.7rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .timeline-item {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.72rem;
+      align-items: start;
+    }
+
+    .timeline-dot {
+      width: 0.82rem;
+      height: 0.82rem;
+      margin-top: 0.35rem;
+      border: 2px solid var(--card);
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+    }
+
+    .timeline-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      background: color-mix(in srgb, var(--card) 82%, transparent);
+      padding: 0.72rem 0.82rem;
+    }
+
+    .timeline-time {
+      display: block;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .breadcrumb-trail {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .breadcrumb-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      color: var(--text);
+      font-weight: 750;
+    }
+
+    .breadcrumb-separator {
+      color: var(--muted);
+    }
+
+    .topic-browser {
+      display: grid;
+      grid-template-columns: minmax(280px, 2fr) minmax(320px, 3fr);
+      gap: 1rem;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+
+    .mermaid-panel,
+    .detail-panel {
+      min-height: 430px;
+    }
+
+    .mermaid-canvas {
+      display: grid;
+      min-height: 340px;
+      overflow: auto;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--accent) 7%, transparent), transparent),
+        color-mix(in srgb, var(--card) 70%, transparent);
+      padding: 1rem;
+    }
+
+    .mermaid-canvas svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .detail-card {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .detail-heading {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.7rem;
+    }
+
+    .detail-heading h2 {
+      margin: 0;
+      font-size: clamp(1.2rem, 2vw, 1.65rem);
+      letter-spacing: -0.03em;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+
+    .field-item {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      background: color-mix(in srgb, var(--card) 78%, transparent);
+      padding: 0.7rem;
+    }
+
+    .field-item dt {
+      margin-bottom: 0.25rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .field-item dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+      font-weight: 650;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 0.45rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      background: color-mix(in srgb, var(--green) 7%, var(--card));
+      padding: 0.55rem 0.65rem;
+    }
+
+    .check-mark {
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .children-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .link-button {
+      padding: 0.38rem 0.58rem;
+      color: var(--accent);
+      font-weight: 750;
+    }
+
+    .footer {
+      width: min(1280px, calc(100% - 2rem));
+      margin: 0 auto;
+      border-top: 1px solid var(--line);
+      padding: 1rem 0 1.4rem;
+      color: var(--muted);
+      font-size: 0.86rem;
+      text-align: center;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+
+    @media (max-width: 920px) {
+      :root {
+        --topbar-height: 174px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .topbar-actions {
+        justify-content: flex-start;
+      }
+
+      .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --topbar-height: 190px;
+      }
+
+      .app-shell {
+        width: min(100% - 1rem, 1280px);
+      }
+
+      .topbar,
+      .tabs {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+      }
+
+      .tab-button {
+        min-width: 7.2rem;
+      }
+
+      .stat-grid,
+      .topic-browser,
+      .field-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .mermaid-panel,
+      .detail-panel {
+        min-height: auto;
+      }
+
+      table {
+        min-width: 760px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      :root {
+        --topbar-height: 224px;
+      }
+
+      .project-glyph {
+        width: 38px;
+        height: 38px;
+      }
+
+      .control-button {
+        width: 100%;
+      }
+
+      .topbar-actions {
+        width: 100%;
+      }
+
+      .stat-grid {
+        gap: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+  <header class="app-header" aria-label="项目控制台顶部栏">
+    <div class="topbar">
+      <div class="project-mark">
+        <div class="project-glyph" aria-hidden="true">流</div>
+        <div>
+          <h1 class="project-title" id="project-title">项目控制台</h1>
+          <div class="refresh-meta" id="refresh-time" aria-live="polite">等待首次刷新</div>
+        </div>
+      </div>
+      <div class="topbar-actions" aria-label="控制项">
+        <button class="control-button" id="auto-refresh-toggle" type="button" aria-pressed="true" aria-label="切换自动刷新">
+          <span class="pulse-dot is-active" aria-hidden="true"></span>
+          <span id="auto-refresh-label">自动刷新：开</span>
+        </button>
+        <button class="control-button" id="theme-toggle" type="button" aria-pressed="false" aria-label="切换深色模式">
+          <span aria-hidden="true">◐</span>
+          <span id="theme-label">深色模式：关</span>
+        </button>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="控制台标签">
+      <button class="tab-button" id="tab-dashboard" type="button" role="tab" aria-selected="true" aria-controls="panel-dashboard" data-tab="dashboard">仪表盘</button>
+      <button class="tab-button" id="tab-topics" type="button" role="tab" aria-selected="false" aria-controls="panel-topics" data-tab="topics">话题浏览器</button>
+      <button class="tab-button" id="tab-roles" type="button" role="tab" aria-selected="false" aria-controls="panel-roles" data-tab="roles">角色库</button>
+    </nav>
+  </header>
+
+  <main class="app-shell" id="main-content">
+    <div class="loading-state" id="loading-state" role="status" aria-live="polite">
+      <div>
+        <div class="spinner" aria-hidden="true"></div>
+        <strong>正在读取 state.json</strong>
+        <p>首次加载完成后将每 3 秒自动刷新。</p>
+      </div>
+    </div>
+
+    <section class="error-state" id="error-state" role="alert" hidden>
+      <div>
+        <strong>读取 state.json 失败</strong>
+        <p id="error-message">请确认文件存在且 JSON 格式有效。</p>
+      </div>
+    </section>
+
+    <section class="panel section-stack" id="panel-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" data-panel="dashboard" hidden>
+      <div class="stat-grid" id="dashboard-stats"></div>
+      <section class="card panel-card" aria-labelledby="active-topics-title">
+        <div class="section-title">
+          <h2 id="active-topics-title">活跃话题</h2>
+          <p>按 state.json 的 active_topics 展示</p>
+        </div>
+        <div id="active-topics-table"></div>
+      </section>
+      <section class="card panel-card" aria-labelledby="health-title">
+        <div class="section-title">
+          <h2 id="health-title">健康警告</h2>
+          <p>结构、流水与状态检查</p>
+        </div>
+        <div id="health-warnings"></div>
+      </section>
+      <section class="card panel-card" aria-labelledby="timeline-title">
+        <div class="section-title">
+          <h2 id="timeline-title">最近事件时间线</h2>
+          <p>最新 10 条 flow_events</p>
+        </div>
+        <div id="event-timeline"></div>
+      </section>
+      <section class="card panel-card" aria-labelledby="breadcrumb-title">
+        <div class="section-title">
+          <h2 id="breadcrumb-title">焦点面包屑</h2>
+          <p>当前焦点路径</p>
+        </div>
+        <div id="focus-breadcrumb"></div>
+      </section>
+    </section>
+
+    <section class="panel" id="panel-topics" role="tabpanel" aria-labelledby="tab-topics" data-panel="topics" hidden>
+      <div class="topic-browser">
+        <section class="card panel-card mermaid-panel" aria-labelledby="tree-title">
+          <div class="section-title">
+            <h2 id="tree-title">话题结构图</h2>
+            <p>来自 tree_mermaid</p>
+          </div>
+          <div class="mermaid-canvas" id="mermaid-diagram" aria-live="polite"></div>
+        </section>
+        <section class="card panel-card detail-panel" aria-labelledby="detail-title">
+          <div class="section-title">
+            <h2 id="detail-title">话题详情</h2>
+            <p>点击表格行查看</p>
+          </div>
+          <div id="topic-detail"></div>
+        </section>
+      </div>
+      <section class="card panel-card" aria-labelledby="topic-table-title">
+        <div class="section-title">
+          <h2 id="topic-table-title">完整话题表</h2>
+          <p>点击表头排序，按 Esc 取消选择</p>
+        </div>
+        <div id="topic-table"></div>
+      </section>
+    </section>
+
+    <section class="panel" id="panel-roles" role="tabpanel" aria-labelledby="tab-roles" data-panel="roles" hidden>
+      <section class="card panel-card" aria-labelledby="roles-title">
+        <div class="section-title">
+          <h2 id="roles-title">角色库</h2>
+          <p>项目协作角色与场景</p>
+        </div>
+        <div id="roles-table"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">jiacong-flow · smarter-project</footer>
+
+  <script type="module">
+    const MERMAID_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    const TAB_BY_HASH = new Map([
+      ["#dashboard", "dashboard"],
+      ["#topics", "topics"],
+      ["#roles", "roles"]
+    ]);
+    const HASH_BY_TAB = {
+      dashboard: "#dashboard",
+      topics: "#topics",
+      roles: "#roles"
+    };
+    const STATUS_META = {
+      "⏳": { text: "进行中", className: "status-blue" },
+      "✅": { text: "已完成", className: "status-green" },
+      "⏸️": { text: "已暂停", className: "status-grey" },
+      "⏸": { text: "已暂停", className: "status-grey" },
+      "🔻": { text: "已推翻", className: "status-red" },
+      "🗑️": { text: "已废弃", className: "status-dark-grey" },
+      "🗑": { text: "已废弃", className: "status-dark-grey" },
+      "💭": { text: "讨论中", className: "status-purple" },
+      "🌱": { text: "待提炼", className: "status-teal" },
+      "📦": { text: "已封存", className: "status-brown" }
+    };
+    const TOPIC_COLUMNS = [
+      { key: "short_id", label: "ID", value: (topic) => topic.short_id || shortIdFromSlug(topic.slug) },
+      { key: "title", label: "标题", value: (topic) => topic.title },
+      { key: "status", label: "状态", value: (topic) => topic.status || topic.status_icon },
+      { key: "root", label: "Root", value: (topic) => topic.root },
+      { key: "parent", label: "父话题", value: (topic) => topic.parent },
+      { key: "scratch_status", label: "讨论", value: (topic) => topic.scratch_status },
+      { key: "updated", label: "更新时间", value: (topic) => topic.updated },
+      { key: "acceptance_criteria", label: "验收标准", value: (topic) => normalizeList(topic.acceptance_criteria).length }
+    ];
+    const FIELD_LABELS = {
+      slug: "Slug",
+      short_id: "短 ID",
+      title: "标题",
+      status: "状态",
+      status_icon: "状态图标",
+      root: "Root",
+      parent: "父话题",
+      updated: "更新时间",
+      scratch_status: "讨论状态",
+      has_tasks: "任务",
+      acceptance_criteria: "验收标准",
+      children: "子话题"
+    };
+
+    const elements = {
+      root: document.documentElement,
+      title: document.getElementById("project-title"),
+      refreshTime: document.getElementById("refresh-time"),
+      autoToggle: document.getElementById("auto-refresh-toggle"),
+      autoLabel: document.getElementById("auto-refresh-label"),
+      pulseDot: document.querySelector(".pulse-dot"),
+      themeToggle: document.getElementById("theme-toggle"),
+      themeLabel: document.getElementById("theme-label"),
+      loading: document.getElementById("loading-state"),
+      error: document.getElementById("error-state"),
+      errorMessage: document.getElementById("error-message"),
+      dashboardStats: document.getElementById("dashboard-stats"),
+      activeTopics: document.getElementById("active-topics-table"),
+      healthWarnings: document.getElementById("health-warnings"),
+      timeline: document.getElementById("event-timeline"),
+      breadcrumb: document.getElementById("focus-breadcrumb"),
+      mermaid: document.getElementById("mermaid-diagram"),
+      topicDetail: document.getElementById("topic-detail"),
+      topicTable: document.getElementById("topic-table"),
+      rolesTable: document.getElementById("roles-table"),
+      tabs: Array.from(document.querySelectorAll("[role='tab']")),
+      panels: Array.from(document.querySelectorAll("[role='tabpanel']"))
+    };
+
+    const view = {
+      data: null,
+      signatures: new Map(),
+      activeTab: "dashboard",
+      selectedSlug: null,
+      sort: { key: "short_id", direction: "asc" },
+      autoRefresh: localStorage.getItem("console-auto-refresh") !== "false",
+      refreshTimer: null,
+      loadingRefresh: false,
+      lastRefresh: null,
+      mermaidApi: null,
+      explicitTheme: localStorage.getItem("console-theme")
+    };
+
+    boot();
+
+    async function boot() {
+      initTheme();
+      bindControls();
+      updateAutoRefreshControl();
+      switchTab(tabFromLocation(), false);
+      loadMermaid();
+      await loadState(true);
+      scheduleRefresh();
+    }
+
+    function bindControls() {
+      elements.tabs.forEach((tab) => {
+        tab.addEventListener("click", () => switchTab(tab.dataset.tab, true));
+      });
+
+      elements.autoToggle.addEventListener("click", () => {
+        view.autoRefresh = !view.autoRefresh;
+        localStorage.setItem("console-auto-refresh", String(view.autoRefresh));
+        updateAutoRefreshControl();
+        scheduleRefresh();
+      });
+
+      elements.themeToggle.addEventListener("click", () => {
+        const nextTheme = currentTheme() === "dark" ? "light" : "dark";
+        view.explicitTheme = nextTheme;
+        localStorage.setItem("console-theme", nextTheme);
+        applyTheme(nextTheme);
+      });
+
+      elements.topicTable.addEventListener("click", (event) => {
+        const sortButton = event.target.closest("[data-sort-key]");
+        if (sortButton) {
+          setSort(sortButton.dataset.sortKey);
+          return;
+        }
+        const row = event.target.closest("[data-topic-slug]");
+        if (row) {
+          selectTopic(row.dataset.topicSlug);
+        }
+      });
+
+      elements.topicTable.addEventListener("keydown", (event) => {
+        const row = event.target.closest("[data-topic-slug]");
+        if (!row) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          selectTopic(row.dataset.topicSlug);
+        }
+      });
+
+      elements.topicDetail.addEventListener("click", (event) => {
+        const child = event.target.closest("[data-child-slug]");
+        if (child) {
+          selectTopic(child.dataset.childSlug);
+        }
+      });
+
+      window.addEventListener("hashchange", () => switchTab(tabFromLocation(), false));
+
+      document.addEventListener("keydown", (event) => {
+        if (isTypingTarget(event.target)) return;
+        if (event.key === "1") switchTab("dashboard", true);
+        if (event.key === "2") switchTab("topics", true);
+        if (event.key === "3") switchTab("roles", true);
+        if (event.key === "Escape") clearTopicSelection();
+      });
+    }
+
+    function initTheme() {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+      applyTheme(view.explicitTheme || (prefersDark.matches ? "dark" : "light"));
+      prefersDark.addEventListener("change", (event) => {
+        if (!view.explicitTheme) {
+          applyTheme(event.matches ? "dark" : "light");
+        }
+      });
+    }
+
+    function applyTheme(theme) {
+      elements.root.dataset.theme = theme;
+      elements.themeToggle.setAttribute("aria-pressed", String(theme === "dark"));
+      elements.themeLabel.textContent = theme === "dark" ? "深色模式：开" : "深色模式：关";
+      renderMermaid(true);
+    }
+
+    function currentTheme() {
+      return elements.root.dataset.theme === "dark" ? "dark" : "light";
+    }
+
+    function updateAutoRefreshControl() {
+      elements.autoToggle.setAttribute("aria-pressed", String(view.autoRefresh));
+      elements.autoLabel.textContent = view.autoRefresh ? "自动刷新：开" : "自动刷新：关";
+      elements.pulseDot.classList.toggle("is-active", view.autoRefresh);
+    }
+
+    function scheduleRefresh() {
+      if (view.refreshTimer) {
+        clearInterval(view.refreshTimer);
+        view.refreshTimer = null;
+      }
+      if (!view.autoRefresh) return;
+      view.refreshTimer = setInterval(() => loadState(false), 3000);
+    }
+
+    async function loadState(isInitial) {
+      if (view.loadingRefresh) return;
+      view.loadingRefresh = true;
+      if (isInitial) {
+        elements.loading.hidden = false;
+        elements.error.hidden = true;
+      }
+      try {
+        const response = await fetch("state.json", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const raw = await response.json();
+        view.lastRefresh = new Date();
+        applyState(normalizeState(raw));
+        elements.error.hidden = true;
+        elements.loading.hidden = true;
+        setPanelsVisible(true);
+      } catch (error) {
+        showFetchError(error, isInitial);
+      } finally {
+        view.loadingRefresh = false;
+      }
+    }
+
+    function showFetchError(error, isInitial) {
+      elements.errorMessage.textContent = `请确认 state.json 存在且 JSON 格式有效。错误：${error.message}`;
+      elements.error.hidden = false;
+      if (isInitial) {
+        elements.loading.hidden = true;
+        setPanelsVisible(false);
+      } else {
+        elements.refreshTime.textContent = `刷新失败：${formatClock(new Date())}`;
+      }
+    }
+
+    function setPanelsVisible(visible) {
+      elements.panels.forEach((panel) => {
+        panel.hidden = !visible || panel.dataset.panel !== view.activeTab;
+      });
+    }
+
+    function applyState(nextData) {
+      view.data = nextData;
+      updateIfChanged("topbar", {
+        focus: nextData.focus,
+        generated_at: nextData.generated_at,
+        lastRefresh: view.lastRefresh ? view.lastRefresh.toISOString() : ""
+      }, renderTopbar);
+      updateIfChanged("dashboard-stats", {
+        topics: nextData.topics.length,
+        active: nextData.active_topics.length,
+        health: collectWarnings(nextData),
+        scratch: nextData.scratch_distribution
+      }, renderDashboardStats);
+      updateIfChanged("active-topics", nextData.active_topics, renderActiveTopics);
+      updateIfChanged("health-warnings", collectWarnings(nextData), renderHealthWarnings);
+      updateIfChanged("timeline", nextData.flow_events, renderTimeline);
+      updateIfChanged("breadcrumb", nextData.focus, renderBreadcrumb);
+      updateIfChanged("topic-table", {
+        topics: nextData.topics,
+        sort: view.sort
+      }, renderTopicTable);
+      renderTopicDetail();
+      updateIfChanged("roles", nextData.roles, renderRoles);
+      renderMermaid(false);
+    }
+
+    function updateIfChanged(key, payload, render) {
+      const signature = stableStringify(payload);
+      if (view.signatures.get(key) === signature) return;
+      view.signatures.set(key, signature);
+      render();
+    }
+
+    function renderTopbar() {
+      const data = view.data;
+      const title = data.focus?.breadcrumb || data.focus?.raw || "项目控制台";
+      elements.title.textContent = String(title).trim() || "项目控制台";
+      const generated = data.generated_at || "未知";
+      const refreshed = view.lastRefresh ? formatClock(view.lastRefresh) : "尚未刷新";
+      elements.refreshTime.textContent = `状态生成：${generated} · 页面刷新：${refreshed}`;
+    }
+
+    function renderDashboardStats() {
+      const data = view.data;
+      const warnings = collectWarnings(data);
+      const scratch = data.scratch_distribution || {};
+      elements.dashboardStats.innerHTML = [
+        statCard("话题总数", data.topics.length, "全部结构化话题"),
+        statCard("活跃话题", data.active_topics.length, "当前可推进条目"),
+        statCard("健康警告", warnings.length, warnings.length > 0 ? "需要处理" : "暂无异常", warnings.length > 0),
+        `<article class="card stat-card" aria-label="讨论状态统计">
+          <p class="stat-label">讨论状态</p>
+          <p class="stat-value">${Number(scratch["💭"] || 0) + Number(scratch["🌱"] || 0) + Number(scratch["📦"] || 0)}</p>
+          <div class="scratch-counts">
+            ${scratchChip("💭", scratch["💭"] || 0)}
+            ${scratchChip("🌱", scratch["🌱"] || 0)}
+            ${scratchChip("📦", scratch["📦"] || 0)}
+          </div>
+        </article>`
+      ].join("");
+    }
+
+    function statCard(label, value, note, isDanger = false) {
+      return `<article class="card stat-card ${isDanger ? "is-danger" : ""}" aria-label="${escapeAttribute(label)}">
+        <p class="stat-label">${escapeHtml(label)}</p>
+        <p class="stat-value">${escapeHtml(String(value))}</p>
+        <div class="stat-note">${escapeHtml(note)}</div>
+      </article>`;
+    }
+
+    function scratchChip(icon, count) {
+      const meta = STATUS_META[icon];
+      return `<span class="scratch-chip ${meta.className}">
+        <span aria-hidden="true">${icon}</span>
+        <span>${meta.text}：${escapeHtml(String(count))}</span>
+      </span>`;
+    }
+
+    function renderActiveTopics() {
+      const rows = view.data.active_topics;
+      if (!rows.length) {
+        elements.activeTopics.innerHTML = emptyState("暂无活跃话题。");
+        return;
+      }
+      const topicBySlug = new Map(view.data.topics.map((topic) => [topic.slug, topic]));
+      elements.activeTopics.innerHTML = `<div class="table-wrap">
+        <table aria-label="活跃话题表">
+          <thead>
+            <tr>
+              <th scope="col">short_id</th>
+              <th scope="col">title</th>
+              <th scope="col">status_icon</th>
+              <th scope="col">root</th>
+              <th scope="col">updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((row) => {
+              const source = topicBySlug.get(row.slug) || row;
+              return `<tr>
+                <td>${escapeHtml(source.short_id || shortIdFromSlug(source.slug))}</td>
+                <td>${escapeHtml(source.title || "未命名话题")}</td>
+                <td>${statusPill(source.status_icon || row.status_icon || "")}</td>
+                <td>${escapeHtml(source.root || "未归类")}</td>
+                <td>${escapeHtml(source.updated || "未知")}</td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>`;
+    }
+
+    function renderHealthWarnings() {
+      const warnings = collectWarnings(view.data);
+      if (!warnings.length) {
+        elements.healthWarnings.innerHTML = emptyState("暂无健康警告。");
+        return;
+      }
+      elements.healthWarnings.innerHTML = `<div class="warning-grid">
+        ${warnings.map((warning) => `<article class="warning-card ${warning.severity === "error" ? "is-error" : ""}">
+          <strong>${warning.severity === "error" ? "红色警告" : "黄色提醒"}</strong>
+          <div>${escapeHtml(warning.message)}</div>
+        </article>`).join("")}
+      </div>`;
+    }
+
+    function renderTimeline() {
+      const events = normalizeList(view.data.flow_events).slice(-10).reverse();
+      if (!events.length) {
+        elements.timeline.innerHTML = emptyState("暂无最近事件。");
+        return;
+      }
+      elements.timeline.innerHTML = `<ol class="timeline" aria-label="最近事件时间线">
+        ${events.map((event) => {
+          const item = formatEvent(event);
+          return `<li class="timeline-item">
+            <span class="timeline-dot" aria-hidden="true"></span>
+            <div class="timeline-card">
+              <span class="timeline-time">${escapeHtml(item.time || "时间未知")}</span>
+              <strong>${escapeHtml(item.title)}</strong>
+              ${item.detail ? `<div>${escapeHtml(item.detail)}</div>` : ""}
+            </div>
+          </li>`;
+        }).join("")}
+      </ol>`;
+    }
+
+    function renderBreadcrumb() {
+      const parts = breadcrumbParts(view.data.focus);
+      if (!parts.length) {
+        elements.breadcrumb.innerHTML = emptyState("暂无焦点面包屑。");
+        return;
+      }
+      elements.breadcrumb.innerHTML = `<ol class="breadcrumb-trail" aria-label="焦点面包屑">
+        ${parts.map((part, index) => `<li class="breadcrumb-item">
+          <span>${escapeHtml(part)}</span>
+          ${index < parts.length - 1 ? `<span class="breadcrumb-separator" aria-hidden="true">&gt;</span>` : ""}
+        </li>`).join("")}
+      </ol>`;
+    }
+
+    function renderTopicTable() {
+      const topics = sortedTopics();
+      if (!topics.length) {
+        elements.topicTable.innerHTML = emptyState("暂无话题。");
+        return;
+      }
+      elements.topicTable.innerHTML = `<div class="table-wrap">
+        <table aria-label="完整话题表">
+          <thead>
+            <tr>
+              ${TOPIC_COLUMNS.map((column) => {
+                const isActive = view.sort.key === column.key;
+                const sortText = isActive ? (view.sort.direction === "asc" ? "升序" : "降序") : "未排序";
+                const indicator = isActive ? (view.sort.direction === "asc" ? "↑" : "↓") : "↕";
+                return `<th scope="col" aria-sort="${isActive ? (view.sort.direction === "asc" ? "ascending" : "descending") : "none"}">
+                  <button class="sort-button" type="button" data-sort-key="${escapeAttribute(column.key)}" aria-label="按${escapeAttribute(column.label)}排序，当前${sortText}">
+                    <span>${escapeHtml(column.label)}</span>
+                    <span class="sort-indicator" aria-hidden="true">${indicator}</span>
+                  </button>
+                </th>`;
+              }).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${topics.map((topic) => topicRow(topic)).join("")}
+          </tbody>
+        </table>
+      </div>`;
+      markSelectedTopicRow();
+    }
+
+    function topicRow(topic) {
+      const slug = topic.slug || "";
+      const criteriaCount = normalizeList(topic.acceptance_criteria).length;
+      const isSelected = slug && slug === view.selectedSlug;
+      return `<tr data-topic-slug="${escapeAttribute(slug)}" class="${isSelected ? "is-selected" : ""}" tabindex="0" aria-label="选择话题 ${escapeAttribute(topic.title || slug || "未命名话题")}">
+        <td>${escapeHtml(topic.short_id || shortIdFromSlug(slug))}</td>
+        <td>${escapeHtml(topic.title || "未命名话题")}</td>
+        <td>${statusPill(topic.status_icon || iconFromStatus(topic.status), topic.status)}</td>
+        <td>${escapeHtml(topic.root || "未归类")}</td>
+        <td>${escapeHtml(topic.parent || "无")}</td>
+        <td>${statusPill(topic.scratch_status || "")}</td>
+        <td>${escapeHtml(topic.updated || "未知")}</td>
+        <td>${criteriaCount ? `${criteriaCount} 条` : "暂无"}</td>
+      </tr>`;
+    }
+
+    function renderTopicDetail() {
+      const topic = findSelectedTopic();
+      if (!topic) {
+        elements.topicDetail.innerHTML = emptyState("尚未选择话题。请在下方表格点击一行。");
+        markSelectedTopicRow();
+        return;
+      }
+      const entries = Object.entries(topic).filter(([key]) => key !== "acceptance_criteria" && key !== "children");
+      elements.topicDetail.innerHTML = `<article class="detail-card">
+        <div class="detail-heading">
+          <h2>${escapeHtml(topic.title || "未命名话题")}</h2>
+          ${statusPill(topic.status_icon || iconFromStatus(topic.status), topic.status)}
+        </div>
+        <dl class="field-grid">
+          ${entries.map(([key, value]) => `<div class="field-item">
+            <dt>${escapeHtml(FIELD_LABELS[key] || key)}</dt>
+            <dd>${fieldValue(key, value)}</dd>
+          </div>`).join("")}
+        </dl>
+        <section aria-labelledby="criteria-title">
+          <div class="section-title">
+            <h3 id="criteria-title">验收标准</h3>
+            <p>${normalizeList(topic.acceptance_criteria).length} 条</p>
+          </div>
+          ${criteriaList(topic.acceptance_criteria)}
+        </section>
+        <section aria-labelledby="children-title">
+          <div class="section-title">
+            <h3 id="children-title">子话题</h3>
+            <p>${normalizeList(topic.children).length} 个</p>
+          </div>
+          ${childrenList(topic.children)}
+        </section>
+      </article>`;
+      markSelectedTopicRow();
+    }
+
+    function renderRoles() {
+      const roles = view.data.roles;
+      if (!roles.length) {
+        elements.rolesTable.innerHTML = emptyState("暂无角色。使用 role_manager.py 管理角色库。");
+        return;
+      }
+      elements.rolesTable.innerHTML = `<div class="table-wrap">
+        <table aria-label="角色库表">
+          <thead>
+            <tr>
+              <th scope="col">role_id</th>
+              <th scope="col">name</th>
+              <th scope="col">scene</th>
+              <th scope="col">created</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${roles.map((role) => `<tr>
+              <td>${escapeHtml(role.role_id || role.id || "未设置")}</td>
+              <td>${escapeHtml(role.name || "未命名角色")}</td>
+              <td>${escapeHtml(role.scene || "未设置")}</td>
+              <td>${escapeHtml(role.created || role.created_at || "未知")}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`;
+    }
+
+    async function loadMermaid() {
+      try {
+        const module = await import(MERMAID_URL);
+        view.mermaidApi = module.default;
+        renderMermaid(true);
+      } catch (error) {
+        elements.mermaid.innerHTML = errorBlock(`Mermaid 加载失败：${error.message}`);
+      }
+    }
+
+    async function renderMermaid(force) {
+      if (!view.data) return;
+      const code = String(view.data.tree_mermaid || "").trim();
+      const theme = currentTheme() === "dark" ? "dark" : "default";
+      const signature = stableStringify({ code, theme });
+      if (!force && view.signatures.get("mermaid-render") === signature) return;
+      view.signatures.set("mermaid-render", signature);
+      if (!code) {
+        elements.mermaid.innerHTML = emptyState("暂无 Mermaid 结构图。");
+        return;
+      }
+      if (!view.mermaidApi) {
+        elements.mermaid.innerHTML = `<div><div class="spinner" aria-hidden="true"></div><strong>Mermaid 正在加载</strong></div>`;
+        return;
+      }
+      elements.mermaid.innerHTML = `<div><div class="spinner" aria-hidden="true"></div><strong>正在渲染结构图</strong></div>`;
+      try {
+        view.mermaidApi.initialize({
+          startOnLoad: false,
+          theme,
+          securityLevel: "strict",
+          fontFamily: "system-ui, sans-serif"
+        });
+        const renderId = `topic-tree-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        const result = await view.mermaidApi.render(renderId, code);
+        elements.mermaid.innerHTML = result.svg;
+      } catch (error) {
+        elements.mermaid.innerHTML = errorBlock(`Mermaid 渲染失败：${error.message}`);
+      }
+    }
+
+    function switchTab(tab, updateHash) {
+      const nextTab = HASH_BY_TAB[tab] ? tab : "dashboard";
+      view.activeTab = nextTab;
+      elements.tabs.forEach((button) => {
+        const selected = button.dataset.tab === nextTab;
+        button.setAttribute("aria-selected", String(selected));
+        button.tabIndex = selected ? 0 : -1;
+      });
+      elements.panels.forEach((panel) => {
+        panel.hidden = panel.dataset.panel !== nextTab || !view.data;
+      });
+      if (updateHash && location.hash !== HASH_BY_TAB[nextTab]) {
+        history.replaceState(null, "", HASH_BY_TAB[nextTab]);
+      }
+      if (nextTab === "topics") {
+        renderMermaid(false);
+      }
+    }
+
+    function tabFromLocation() {
+      return TAB_BY_HASH.get(location.hash) || "dashboard";
+    }
+
+    function setSort(key) {
+      if (view.sort.key === key) {
+        view.sort.direction = view.sort.direction === "asc" ? "desc" : "asc";
+      } else {
+        view.sort = { key, direction: "asc" };
+      }
+      view.signatures.delete("topic-table");
+      renderTopicTable();
+    }
+
+    function sortedTopics() {
+      const column = TOPIC_COLUMNS.find((item) => item.key === view.sort.key) || TOPIC_COLUMNS[0];
+      const factor = view.sort.direction === "asc" ? 1 : -1;
+      return [...view.data.topics].sort((a, b) => {
+        const av = column.value(a);
+        const bv = column.value(b);
+        if (typeof av === "number" && typeof bv === "number") return (av - bv) * factor;
+        return String(av || "").localeCompare(String(bv || ""), "zh-CN", { numeric: true, sensitivity: "base" }) * factor;
+      });
+    }
+
+    function selectTopic(slug) {
+      if (!slug) return;
+      view.selectedSlug = slug;
+      switchTab("topics", true);
+      renderTopicDetail();
+    }
+
+    function clearTopicSelection() {
+      if (!view.selectedSlug) return;
+      view.selectedSlug = null;
+      renderTopicDetail();
+    }
+
+    function markSelectedTopicRow() {
+      elements.topicTable.querySelectorAll("[data-topic-slug]").forEach((row) => {
+        row.classList.toggle("is-selected", row.dataset.topicSlug === view.selectedSlug);
+      });
+    }
+
+    function findSelectedTopic() {
+      if (!view.data || !view.selectedSlug) return null;
+      return view.data.topics.find((topic) => topic.slug === view.selectedSlug || topic.short_id === view.selectedSlug) || null;
+    }
+
+    function normalizeState(raw) {
+      const data = raw && typeof raw === "object" ? raw : {};
+      return {
+        generated_at: data.generated_at || "",
+        focus: data.focus && typeof data.focus === "object" ? data.focus : {},
+        topics: normalizeList(data.topics).map((topic) => topic && typeof topic === "object" ? topic : {}),
+        tree_mermaid: data.tree_mermaid || "",
+        active_topics: normalizeList(data.active_topics),
+        health: data.health && typeof data.health === "object" ? data.health : {},
+        roles: normalizeList(data.roles).map((role) => role && typeof role === "object" ? role : {}),
+        scratch_distribution: data.scratch_distribution && typeof data.scratch_distribution === "object" ? data.scratch_distribution : {},
+        flow_events: normalizeList(data.flow_events)
+      };
+    }
+
+    function collectWarnings(data) {
+      const health = data.health || {};
+      const warnings = [];
+      normalizeList(health.warnings).forEach((item) => {
+        if (typeof item === "string") {
+          warnings.push({ severity: inferSeverity(item), message: item });
+        } else if (item && typeof item === "object") {
+          warnings.push({
+            severity: item.severity === "error" || item.level === "error" ? "error" : "warn",
+            message: item.message || item.title || stableStringify(item)
+          });
+        }
+      });
+      if (health.stream_warning) {
+        warnings.push({
+          severity: "warn",
+          message: `流水文件偏大：${health.stream_lines || 0} 行，约 ${health.stream_size_kb || 0} KB。`
+        });
+      }
+      if (health.vision_warning) {
+        warnings.push({
+          severity: "warn",
+          message: `愿景文档已有 ${health.vision_days_since_update ?? "未知"} 天未更新。`
+        });
+      }
+      if (Number(health.broken_links || 0) > 0) {
+        warnings.push({ severity: "error", message: `发现 ${health.broken_links} 个断链。` });
+      }
+      if (Number(health.status_issues || 0) > 0) {
+        warnings.push({ severity: "error", message: `发现 ${health.status_issues} 个状态问题。` });
+      }
+      return warnings;
+    }
+
+    function inferSeverity(message) {
+      return /error|错误|失败|断链|严重|红色/i.test(message) ? "error" : "warn";
+    }
+
+    function statusPill(icon, fallbackText = "") {
+      const normalizedIcon = iconFromStatus(icon || fallbackText);
+      if (!normalizedIcon) {
+        return `<span class="status-pill"><span>未设置</span></span>`;
+      }
+      const meta = STATUS_META[normalizedIcon] || { text: String(fallbackText || normalizedIcon).replace(normalizedIcon, "").trim() || "未知状态", className: "" };
+      return `<span class="status-pill ${meta.className}">
+        <span aria-hidden="true">${escapeHtml(normalizedIcon)}</span>
+        <span>${escapeHtml(meta.text)}</span>
+      </span>`;
+    }
+
+    function iconFromStatus(value) {
+      const text = String(value || "");
+      return Object.keys(STATUS_META).find((icon) => text.includes(icon)) || "";
+    }
+
+    function fieldValue(key, value) {
+      if (key === "status" || key === "status_icon" || key === "scratch_status") {
+        return statusPill(iconFromStatus(value), String(value || ""));
+      }
+      if (typeof value === "boolean") return value ? "是" : "否";
+      if (value === null || value === undefined || value === "") return "无";
+      if (Array.isArray(value)) return value.length ? escapeHtml(value.join("，")) : "无";
+      if (typeof value === "object") return escapeHtml(stableStringify(value));
+      return escapeHtml(String(value));
+    }
+
+    function criteriaList(criteria) {
+      const list = normalizeList(criteria);
+      if (!list.length) return emptyState("暂无验收标准。");
+      return `<ul class="checklist">
+        ${list.map((item) => `<li><span class="check-mark" aria-hidden="true">✓</span><span>${escapeHtml(formatListItem(item))}</span></li>`).join("")}
+      </ul>`;
+    }
+
+    function childrenList(children) {
+      const list = normalizeList(children);
+      if (!list.length) return emptyState("暂无子话题。");
+      return `<ul class="children-list">
+        ${list.map((child) => {
+          const resolved = resolveChild(child);
+          if (!resolved.slug) {
+            return `<li><span class="scratch-chip">${escapeHtml(resolved.label)}</span></li>`;
+          }
+          return `<li><button class="link-button" type="button" data-child-slug="${escapeAttribute(resolved.slug)}">${escapeHtml(resolved.label)}</button></li>`;
+        }).join("")}
+      </ul>`;
+    }
+
+    function resolveChild(child) {
+      if (child && typeof child === "object") {
+        const slug = child.slug || child.short_id || "";
+        const topic = findTopic(slug);
+        return {
+          slug: topic?.slug || child.slug || "",
+          label: child.title || topic?.title || child.short_id || child.slug || "未命名子话题"
+        };
+      }
+      const text = String(child || "");
+      const topic = findTopic(text);
+      return {
+        slug: topic?.slug || "",
+        label: topic ? `${topic.short_id || shortIdFromSlug(topic.slug)} ${topic.title || ""}`.trim() : text
+      };
+    }
+
+    function findTopic(value) {
+      if (!view.data) return null;
+      return view.data.topics.find((topic) => topic.slug === value || topic.short_id === value || topic.title === value) || null;
+    }
+
+    function formatEvent(event) {
+      if (typeof event === "string") {
+        return { time: "", title: event, detail: "" };
+      }
+      if (!event || typeof event !== "object") {
+        return { time: "", title: String(event), detail: "" };
+      }
+      const time = event.time || event.ts || event.created || event.created_at || event.updated || event.date || "";
+      const title = event.message || event.title || event.event || event.action || event.type || "事件";
+      const topic = event.topic || event.slug || event.short_id || event.root || "";
+      return {
+        time,
+        title,
+        detail: topic ? `关联：${topic}` : ""
+      };
+    }
+
+    function breadcrumbParts(focus) {
+      const breadcrumb = focus?.breadcrumb;
+      if (Array.isArray(breadcrumb)) return breadcrumb.map(String).filter(Boolean);
+      if (typeof breadcrumb === "string" && breadcrumb.trim()) {
+        const splitter = breadcrumb.includes(">") ? />/ : breadcrumb.includes("/") ? /\// : null;
+        return splitter ? breadcrumb.split(splitter).map((item) => item.trim()).filter(Boolean) : [breadcrumb.trim()];
+      }
+      if (focus?.raw) return [String(focus.raw)];
+      return [];
+    }
+
+    function normalizeList(value) {
+      return Array.isArray(value) ? value : [];
+    }
+
+    function formatListItem(value) {
+      if (value && typeof value === "object") {
+        return value.text || value.title || value.message || stableStringify(value);
+      }
+      return String(value ?? "");
+    }
+
+    function shortIdFromSlug(slug) {
+      return String(slug || "").split("_")[0] || "";
+    }
+
+    function emptyState(message) {
+      return `<div class="empty-state"><p>${escapeHtml(message)}</p></div>`;
+    }
+
+    function errorBlock(message) {
+      return `<div class="error-state"><p>${escapeHtml(message)}</p></div>`;
+    }
+
+    function isTypingTarget(target) {
+      return target instanceof HTMLElement && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
+    }
+
+    function formatClock(date) {
+      return date.toLocaleTimeString("zh-CN", { hour12: false });
+    }
+
+    function stableStringify(value) {
+      const seen = new WeakSet();
+      return JSON.stringify(value, (_key, item) => {
+        if (!item || typeof item !== "object") return item;
+        if (seen.has(item)) return "[循环引用]";
+        seen.add(item);
+        if (Array.isArray(item)) return item;
+        return Object.keys(item).sort().reduce((sorted, key) => {
+          sorted[key] = item[key];
+          return sorted;
+        }, {});
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function escapeAttribute(value) {
+      return escapeHtml(value);
+    }
+  </script>
+</body>
+</html>

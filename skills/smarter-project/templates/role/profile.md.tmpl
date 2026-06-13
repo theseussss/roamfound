@@ -1,0 +1,62 @@
+---
+id: {{ role_id }}
+card_type: persona
+scope: {{ scope }}
+category: {{ category }}
+created: {{ created }}
+verified_projects: {{ verified_projects | default("[]") }}
+---
+
+# {{ role_title }}
+
+> **定位**：{{ role_tagline | default("（一句话定位，用于总索引速查）") }}
+> **适用触发**：{{ trigger_hint | default("（什么类型的问题应召唤此角色）") }}
+
+---
+
+## 📑 本卡目录
+
+- 1 角色职能定义
+- 2 代表人物群
+- 3 经验
+- 4 思考框架
+- 5 见过的失败
+- 6 盲区
+- 7 适用场景
+
+---
+
+## 1 角色职能定义
+
+{{ function_definition | default("（2-3 句话说清此角色的特定职能：它专门处理什么类型的问题、与同类角色的区别点、核心增量。对应 roles-ops.md §2 第 1 栏"角色"字段——H1 的 tagline 是速查标签，本节是完整职能说明）") }}
+
+## 2 代表人物群
+
+{{ representatives | default("（列出该思想流派的代表学者/作者/实践者，用顿号或列表分隔；不求全，求能精确锚定该角色的认知位置）") }}
+
+## 3 经验
+
+{{ experience | default("（此角色最熟悉的领域与问题类型。一句话或一段话，点明其认知优势面）") }}
+
+## 4 思考框架
+
+{{ framework | default("（此角色处理问题时调用的核心概念/分析工具/判断准则）") }}
+
+## 5 见过的失败
+
+{{ failures | default("（此角色典型的踩坑案例或易发错误模式——用于提醒 AI 不要犯同样的错）") }}
+
+## 6 盲区
+
+{{ blindspots | default("（此角色不擅长或看不见的方向——用于提醒用户不要过度依赖单一角色）") }}
+
+## 7 适用场景
+
+{{ scenarios | default("（什么样的问题/讨论阶段应召唤此角色。至少给出 2-3 个触发条件）") }}
+
+---
+
+## 🔗 关联
+
+- **相关角色**：{{ related_roles | default("（同类或互补角色的 id 列表，用 `[[role_id]]` 链接语法）") }}
+- **验证记录**：{{ verification_notes | default("（在哪些项目/话题中使用过，产生了什么洞察——升级全局时需填充）") }}

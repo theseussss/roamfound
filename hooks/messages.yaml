@@ -1,0 +1,344 @@
+# User-visible hook text. Keep all hook wording here so CLI protocols and
+# lifecycle checks can change without chasing scattered strings in event files.
+
+root.unsafe.home:
+  text: |
+    当前目录：{cwd}（Home 目录）
+
+    扫描结果：
+    - cwd 来源：{cwd_source}（可信度：{cwd_confidence}）
+    - 确认标记：{marker_status_display}
+    - 旧项目管理痕迹：{legacy_traces_display}
+    - 结构特征：{structure_features_display}
+    - 下一层：{children_summary}
+    {has_confirmed_subdirs_note}
+
+    硬性约束（不可协商）：
+    - 不能在 Home 目录创建 .jiacong/project.json
+    - 不能把旧痕迹当作项目根授权依据
+    - 不能进入项目治理流程，不能写入项目记录，不能启动后台监听
+    - 不能擅自迁移旧痕迹
+    - 可以临时回答用户问题
+
+    你的职责：当用户请求涉及项目管理、建档、焦点、记录、后台监听或文件写入时，先说明当前目录状态和权限边界；若用户只是普通问答，可以临时回答，但不得产生项目治理副作用。
+
+root.unsafe.root:
+  text: |
+    当前目录：{cwd}（文件系统根目录）
+
+    硬性约束（不可协商）：禁止在文件系统根目录进行任何项目管理操作；禁止创建 .jiacong/project.json；禁止进入项目治理流程、写入项目记录或启动后台监听。只能临时回答用户问题。
+
+root.unsafe.mount:
+  text: |
+    当前目录：{cwd}（浅层挂载点）
+
+    扫描结果：
+    - cwd 来源：{cwd_source}（可信度：{cwd_confidence}）
+    - 确认标记：{marker_status_display}
+    - 旧项目管理痕迹：{legacy_traces_display}
+    - 结构特征：{structure_features_display}
+    - 下一层：{children_summary}
+    {has_confirmed_subdirs_note}
+
+    硬性约束（不可协商）：不能以浅层挂载点本身作为项目根；不能进入项目治理流程，不能写入项目记录，不能启动后台监听。可以建议用户切换到子目录中的已确认项目，但不能自动切换或自动启用治理。
+
+root.needs_judgment:
+  text: |
+    当前目录尚未确认为项目根。
+
+    扫描事实：
+    - 当前目录：{cwd}
+    - 目录名称：{dirname}
+    - cwd 来源：{cwd_source}（可信度：{cwd_confidence}）
+    - 确认标记：{marker_status_display}
+    - 旧项目管理痕迹：{legacy_traces_display}
+    - 结构特征：{structure_features_display}
+    - 特殊目录类型：{special_dir_display}
+    - 上一层确认标记：{parent_has_confirmed_marker_display}
+    - 上一层旧痕迹：{parent_legacy_traces_display}
+    - 上一层结构特征：{parent_structure_features_display}
+    - 下一层：{children_summary}
+    {has_confirmed_subdirs_note}
+
+    权限边界：AI 只有提议权，没有决策权；不能擅自创建 .jiacong/project.json，不能擅自启用项目治理，不能擅自迁移旧痕迹。只有用户明确确认后才能执行建档、迁移或套餐选择。
+
+    AI 职责：根据目录名、项目线索、旧痕迹、特殊目录、上中下三层结构关系判断是否值得建档，并向用户提出方案；workspace/单项目只是建档套餐选项，不是扫描分类。
+
+root.workspace_no_selection:
+  text: "当前目录包含 workspace 结构线索，但是否采用 workspace 模式需要用户决策；在确认项目根前，不能进入项目治理流程。"
+root.legacy_confirm:
+  text: "检测到 AI 协作或旧项目管理痕迹：{candidate_root}，但未发现有效 .jiacong/project.json；这些痕迹只能作为线索，不能作为项目根授权依据。"
+root.unsafe_candidate:
+  text: "当前目录属于未确认候选目录：{candidate_root}。在完成项目根确认前，不能进入项目治理流程，不能写入项目记录，不能启动后台监听。"
+root.candidate_init:
+  text: "当前目录尚未建档：{candidate_root}。AI 只有提议权；如需建档，必须先由用户确认建档位置和套餐。"
+
+runtime.current_time:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: runtime_fact
+  category: current_time
+  audience: assistant_runtime
+  response_policy: use_as_time_fact
+  requires_action: false
+  preserve_text: true
+  text: |
+    当前本地时间：{local_datetime}
+    当前日期：{local_date}
+    当前时区：{timezone}
+
+hook.header:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: project_context
+  category: header
+  audience: assistant_runtime
+  response_policy: do_not_answer
+  preserve_text: true
+  text: "[Jiacong Flow / smarter-project Hermes hook]"
+
+context.project_root:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: project_context
+  category: project_root
+  audience: assistant_runtime
+  response_policy: use_for_project_state
+  preserve_text: true
+  text: "管理根：{project_root}{branch}{selection}（root={root_kind}）。若本轮目标不在此根，先声明：延续当前根 | 侧写其他根 | 明确目标路径或切换项目根。"
+
+source.layer_classification:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: project_context
+  category: source_layer_classification
+  audience: assistant_runtime
+  response_policy: use_for_project_state
+  requires_action: true
+  action_type: classify_source_layer
+  preserve_text: true
+  text: "文件操作前先判断改动层级：管理层 / 内容层 / 混合。管理层=项目治理与AI协作记录，如 .jiacong/、topics/、logs/、doc/Framework/、入口文档；内容层=真实交付物或源码，如 source/main/<source_dir>/、source/worktrees/、源码/正文/HTML/产物。混合改动必须拆提交：先提交内容层，再提交管理层记录；运行态和生成态默认不提交。若项目存在 .jiacong/source.json，先按其中 source_root/source_dir 判断内容层位置；若不存在，按当前 cwd 和显式路径判断。"
+
+focus.missing.header:
+  text: "当前会话未定位话题。请选择现有话题或新建："
+focus.missing.tree:
+  text: "  查看话题树：python {tree_script} {project_root}"
+focus.missing.new:
+  text: "  新建话题：python {topic_new_script} {project_root} <简称> --parent <ID|null> --root <emoji标签>"
+focus.missing.set:
+  text: "  定位焦点：写入合法 JSON 到 {focus_path}，格式为 {\"schema_version\":1,\"topic_id\":\"NNN\",\"source\":\"manual\"}"
+focus.not_found:
+  text: "⚠️ 焦点 {topic_id} 指向不存在的话题。请重新定位或新建。"
+focus.breadcrumb:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: focus_state
+  category: focus_breadcrumb
+  audience: assistant_runtime
+  response_policy: use_for_routing
+  preserve_text: true
+  text: "当前话题： {root} > {focus_value} · {status}"
+focus.breadcrumb.parent:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: focus_state
+  category: focus_breadcrumb
+  audience: assistant_runtime
+  response_policy: use_for_routing
+  preserve_text: true
+  text: "当前话题： {root} > {parent} > {focus_value} · {status}"
+focus.classify_required:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: routing_policy
+  category: focus_classification
+  audience: assistant_runtime
+  response_policy: use_for_routing
+  requires_action: true
+  action_type: classify_focus
+  preserve_text: true
+  text: "此消息在话题 {focus_value}范畴内吗？必须先回复属于哪一种路由类型并完整输出理由：延续 | 侧写 | 切焦点 | 需询问。回复开头必须逐项严肃诚实判断：1 当前未切换的话题正在回答的问题边界是？；2 真实用户消息正在提出的问题是？用户消息在旧话题边界内的概率和模型的信心是多少？给出一个具体评分（0-100），若不确定，宁问不动；3.根据得分分析路由类型；"
+focus.classify_options:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: routing_policy
+  category: focus_classification_options
+  audience: assistant_runtime
+  response_policy: use_for_routing
+  preserve_text: true
+  text: "延续：得分高，且模型足够自信判定真实用户消息仍在当前原子话题的问题边界内，写当前话题的scratch | 侧写：得分低，且模型足够自信判定消息不在当前话题但并非主线，同时出现可索引到其他话题的材料，写目标话题的 scratch 并双向索引在本话题scratch | 切焦点：得分低，且模型自信判定真实用户消息已经进入另一个完整话题，或需要新建边界更清楚的原子话题；先确定目标话题编号，把 .jiacong/focus.json 写成合法 JSON（schema_version/topic_id/source），必要时新建话题，禁止把话题名写成无法自明的过于抽象的命名，话题名不限字数。然后签退log→签到log→写目标 scratch | 需询问：无论得分高低，但模型自信程度较低，或对象、边界、写入位置不清楚，必须先问用户确认，不写 scratch"
+stream.missing:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: stream_state
+  category: stream_missing
+  audience: assistant_runtime
+  response_policy: use_for_obligation_check
+  requires_action: true
+  action_type: initialize_stream
+  preserve_text: true
+  text: "⚠️ logs/stream.md 不存在。请先初始化项目：python {init_script} {project_root} --type <套餐>"
+stream.stale:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: stream_state
+  category: stream_stale
+  audience: assistant_runtime
+  response_policy: use_for_obligation_check
+  requires_action: true
+  action_type: record_stream_or_scratch
+  preserve_text: true
+  text: "⚠️ 流水超过 24 小时未更新（上次：{last_entry}）。请记录本轮讨论。"
+
+bridge.baseline:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: bridge_state
+  category: bridge_baseline
+  audience: assistant_runtime
+  response_policy: use_for_project_state
+  preserve_text: true
+  text: "bridge 常驻：主门控=smarter-project；复杂判断/方案/证据审查可并用 one-turn-proposal；产出回写当前话题。"
+framework.update_check:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: framework_state
+  category: framework_update_check
+  audience: assistant_runtime
+  response_policy: use_for_project_state
+  requires_action: true
+  action_type: check_framework_update
+  preserve_text: true
+  text: "Framework 更新检查：每轮都要检查本轮内容是否影响项目级 Framework。检查结果归为四类之一：无需更新 / 候选进 scratch / 提出更新方案 / 已获批更新。按 scratch 维护模式处理：若本轮只产生讨论过程、疑问、临时判断或未稳定变化，先写入当前 topic/scratch，必要时标记为 Framework 候选；若候选已经稳定、可跨话题复用，并会改变项目级最高压缩层，先提出更新方案，说明应归入 Vision（目标、完成样态、验收标准）、Structure（目录、模块、对象关系、codemap）、Style（文风、界面手感、呈现规范）还是 Trace（任务链、问题链、修复链、决策链）；只有用户确认后，才维护 doc/Framework/ 对应主文件。"
+bridge.signal.composite:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: bridge_state
+  category: bridge_signal
+  audience: assistant_runtime
+  response_policy: use_for_project_state
+  preserve_text: true
+  text: "bridge 信号：项目记录 + 复杂判断；先判焦点，必要时读 proposal-bridge.md，产出回写。"
+bridge.signal.project:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: bridge_state
+  category: bridge_signal
+  audience: assistant_runtime
+  response_policy: use_for_project_state
+  preserve_text: true
+  text: "bridge 信号：项目状态/话题/记录；按 smarter-project 每轮循环处理。"
+bridge.signal.proposal:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: bridge_state
+  category: bridge_signal
+  audience: assistant_runtime
+  response_policy: use_for_project_state
+  preserve_text: true
+  text: "bridge 信号：复杂判断/方案/证据审查；必要时读 proposal-bridge.md，按 one-turn-proposal 答，项目产出回写。"
+
+diagnostic.hermes_adapter:
+  sender: hook
+  source: jiacong-flow-hook
+  layer: diagnostic
+  category: hermes_adapter
+  audience: assistant_runtime
+  response_policy: diagnostic_only
+  preserve_text: true
+  text: "[Jiacong Flow] Hermes adapter: using shared Claude hook core; root_kind={root_kind}; selection={selection}; reason={reason}"
+
+stop.scratch_side_write_missing:
+  text: "⚠️ 检测到侧写（{other_written} 的 scratch 有增量），但当前焦点 {topic_id} 的 scratch 未更新。侧写须双向索引：请在 {scratch_path} 追加一条引用侧写话题的记录。轻量轮一行即可，重量轮详细记录。"
+stop.scratch_missing:
+  text: "⚠️ 本轮未写 scratch（§1.3 ④ 每轮必做）。请在 {scratch_path} 增量追加（新条目或在当前条目内追加），不得修改既有内容。轻量轮一行即可，重量轮详细记录。"
+stop.touched_topic_scratch_missing:
+  text: "⚠️ 检测到本轮修改了这些话题文件，但对应话题 scratch 没有增量：{topics}。请在同 root 同 topic 的 scratch.md 追加记录，不能用其他分支或其他话题的 scratch 代替。"
+stop.touched_root_scratch_missing:
+  text: "⚠️ 检测到本轮修改了这些项目根，但该项目根没有任何 scratch 增量：{roots}。请在实际修改所在项目根的当前话题 scratch.md 追加记录。"
+stop.focus_log_missing:
+  text: "焦点已从 {saved_focus} 切换到 {current_focus}，log 签退/签到未完成（§2.2）。请在 logs/stream.md 补写旧话题签退条目和新话题签到条目。"
+
+session.unsafe.home:
+  text: |
+    当前目录：{cwd}（Home 目录）
+    扫描事实：目录来源={cwd_source}/{cwd_confidence}；确认标记={marker_status_display}；旧痕迹={legacy_traces_display}；结构特征={structure_features_display}；下一层={children_summary}。
+    {has_confirmed_subdirs_note}
+    硬性约束：不能在 Home 目录建档；不能把旧痕迹当作授权；不能进入项目治理流程，不能写入项目记录，不能启动后台监听。若用户请求项目管理、建档、焦点、记录、后台监听或文件写入，先说明权限边界并提议切换到具体项目目录；普通问答可临时回答但不得产生项目治理副作用。
+
+session.unsafe.root:
+  text: |
+    当前目录：{cwd}（文件系统根目录）
+    扫描事实：目录来源={cwd_source}/{cwd_confidence}。
+    硬性约束：禁止在文件系统根目录进行任何项目管理操作；不能创建 .jiacong/project.json；不能进入项目治理流程，不能写入项目记录，不能启动后台监听。普通问答可临时回答。
+
+session.unsafe.mount:
+  text: |
+    当前目录：{cwd}（浅层挂载点）
+    扫描事实：目录来源={cwd_source}/{cwd_confidence}；确认标记={marker_status_display}；旧痕迹={legacy_traces_display}；结构特征={structure_features_display}；下一层={children_summary}。
+    {has_confirmed_subdirs_note}
+    硬性约束：不能以浅层挂载点本身作为项目根；不能进入项目治理流程，不能写入项目记录，不能启动后台监听。可以建议切换到子目录中的已确认项目，但不能自动切换或自动启用治理。
+
+session.needs_judgment:
+  text: |
+    当前目录尚未确认为项目根。扫描事实：cwd={cwd}；来源={cwd_source}/{cwd_confidence}；确认标记={marker_status_display}；旧痕迹={legacy_traces_display}；结构特征={structure_features_display}；特殊目录={special_dir_display}；上一层确认={parent_has_confirmed_marker_display}；下一层={children_summary}。
+    {has_confirmed_subdirs_note}
+    权限边界：AI 只有提议权，没有决策权；在用户明确确认前，不能建档、不能启用项目治理、不能迁移旧痕迹。workspace/单项目只是建档套餐选项，不是扫描分类。
+
+session.unmanaged.followup:
+  text: |
+    当前会话未绑定已确认的项目根；本轮不启用焦点、话题、scratch、logs 或后台监听。
+
+    分级建档策略（参考 `init-project.md §1 四套架构套餐` 与 `§1.5 打开任意文件夹时的入口分类器`）：
+    - 先判治理授权，再判文件夹角色，最后判套餐；有效 `.jiacong/project.json` 是唯一治理授权，旧 `.claude/`、`topics/`、`logs/` 只能作迁移线索。
+    - 已有有效 `.jiacong/project.json`：进入该管理根治理分支；项目记录写在此根，源码或正文产物按内容层路径处理。
+    - 当前目录有 `.git` 但无 `project.json`：默认按既有项目候选管理根处理，优先原位建档；若是代码、正文、HTML 或其他交付物生产项目，再建议启用 source layer / 双层 Git。理想实践是管理根普通 Git 管治理，source layer Git 管内容，不把管理根改造成 workspace 容器。
+    - 当前目录无 Git 且为空：默认建议建立标准管理根；需要版本化治理时启用管理层 Git；需要独立管理源码、正文或 HTML 等产物时启用 source layer；双层 Git 的推荐组合是 `--init-management-git --source-workspace` 或快捷 `--dual-git`。
+    - 当前目录无 Git 但已有历史文件：标准项目可原位 init；若历史文件应成为内容层，先提出迁入 source layer 的方案，用户确认前不移动、不包进 workspace。
+    - 有 `.repo.git/` 且有 `main/` 或 `worktrees/`：这是 legacy 管理层 workspace 或既有容器结构线索；不在外层写 `topics/` 或 `logs/`，先判断其身份，再根据 workspace selection 定位内层已确认管理根并检查 `.jiacong/project.json`。新项目默认不推荐走这一路。
+    - 只有旧痕迹、半建档结构、父目录多 repo 或混合 Git 模式：停止自动初始化，先做体检；不能自动选父目录建档，不能把内容层 Git/worktree 当作管理根授权。
+    - 套餐按项目性质确认：学术论文 / 实证研究 / 代码项目 / 短平快；用户确认前不得创建 `.jiacong/project.json`。
+
+    脚本只提供运行边界和入口分类参考；AI 负责解释和提案；用户拥有建档、Git 形态、source layer / 双层 Git 与结构迁移的决策权。
+
+session.workspace_no_selection:
+  text: "检测到 workspace 结构线索，但是否采用 workspace 模式需要用户决策；在确认项目根前，不能进入项目治理流程。"
+session.legacy_confirm:
+  text: "检测到 AI 协作或旧项目管理痕迹：{candidate_root}，但未发现有效 .jiacong/project.json；这些痕迹只能作为线索，不能作为项目根授权依据。"
+session.unsafe_candidate:
+  text: "当前目录属于未确认候选目录：{candidate_root}。在完成项目根确认前，不能进入项目治理流程，不能写入项目记录，不能启动后台监听。"
+session.candidate_init:
+  text: "当前根尚未建档：{candidate_root}。AI 只有提议权；如需建档，必须先由用户确认建档位置和套餐。"
+session.focus_empty:
+  text: "焦点为空，请先定位话题"
+session.focus_not_found:
+  text: "⚠️ 焦点 {topic_id} 指向不存在的话题"
+session.focus:
+  text: "焦点: {focus_value} · {status} · {root}"
+session.recent:
+  text: "最近: {last}"
+session.health_warnings:
+  text: "健康警告: {warnings}"
+session.stream_missing:
+  text: "⚠️ logs/stream.md 不存在"
+session.dashboard_missing:
+  text: "仪表盘未生成"
+session.watcher_spawned:
+  text: "[Jiacong Flow session_start] watcher spawned (pid={pid})"
+session.end:
+  text: "[Jiacong Flow session_end] watcher stopped, health report saved"
+
+auto.workspace_no_selection:
+  text: "[{marker}] workspace 结构线索存在，但是否采用 workspace 模式需要用户决策。"
+auto.candidate_init:
+  text: "[{marker}] 当前根仅是建档候选，尚未初始化 smarter-project。AI 只有提议权；如需建档，必须由用户确认建档位置和套餐。"
+auto.focus_missing:
+  text: "[focus] 当前会话未定位话题。请选择现有话题或新建："
+auto.focus_new:
+  text: '[focus]   新建话题：python "{topic_new_script}" "{project_root}" <简称> --parent <ID|null> --root <emoji>'
+auto.stream_missing:
+  text: "[stream] ⚠️ logs/stream.md 不存在。"
+auto.install_codex:
+  text: "[{marker}] ✅ Codex 项目级 hooks 已安装到 {hooks_path}（下次会话生效）"
+auto.install_default:
+  text: "[{marker}] ✅ 项目级 hooks 已安装到 {hooks_path}"

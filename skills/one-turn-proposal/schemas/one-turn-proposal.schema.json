@@ -1,0 +1,330 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/one-turn-proposal.schema.json",
+  "title": "OneTurnProposalState",
+  "description": "Optional sidecar state for the one-turn proposal methodology v0.3. Use for productized, agentic, evidence-aware, or evaluation workflows; do not expose by default.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "task_type",
+    "complexity_level",
+    "need_reconstruction",
+    "core_judgment",
+    "next_step"
+  ],
+  "properties": {
+    "protocol_version": {
+      "type": "string",
+      "enum": [
+        "0.2",
+        "0.3"
+      ],
+      "default": "0.3"
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "framework_design",
+        "methodology_audit",
+        "strategy",
+        "product",
+        "technical",
+        "architecture_decision",
+        "decision_support",
+        "research_synthesis",
+        "writing",
+        "review_critique",
+        "execution_plan",
+        "evidence_review",
+        "information_lookup",
+        "other"
+      ]
+    },
+    "complexity_level": {
+      "type": "string",
+      "enum": [
+        "l1_direct",
+        "l2_structured",
+        "l3_formal_proposal"
+      ]
+    },
+    "need_reconstruction": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "core_judgment": {
+      "type": "string",
+      "minLength": 1
+    },
+    "judgment_type": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "recommendation",
+          "priority",
+          "tradeoff",
+          "rejection",
+          "confidence",
+          "condition"
+        ]
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "dominant_criterion": {
+      "type": "string"
+    },
+    "structure": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "section",
+          "purpose"
+        ],
+        "properties": {
+          "section": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          }
+        }
+      },
+      "default": []
+    },
+    "recommendation": {
+      "type": "string"
+    },
+    "alternatives_considered": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "benefit",
+          "cost",
+          "selected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "benefit": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "string"
+          },
+          "selected": {
+            "type": "boolean"
+          }
+        }
+      },
+      "default": []
+    },
+    "execution_path": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "risks_and_boundaries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "evidence_basis": {
+      "type": "string",
+      "enum": [
+        "internal_reasoning",
+        "user_provided_context",
+        "cited_sources",
+        "tool_results",
+        "mixed",
+        "not_required"
+      ]
+    },
+    "uncertainty": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "next_step": {
+      "type": "string",
+      "minLength": 1
+    },
+    "adapter_used": {
+      "type": "string",
+      "enum": [
+        "none",
+        "prd",
+        "pr_faq",
+        "rfc",
+        "adr",
+        "decision_memo",
+        "consulting_proposal",
+        "writing_brief",
+        "research_synthesis",
+        "review",
+        "project_plan",
+        "evidence_retrieval"
+      ]
+    },
+    "quality_flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "semantic_map_used": {
+      "type": "boolean",
+      "default": false
+    },
+    "retrieval_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "retrieval_trigger": {
+      "type": "string",
+      "enum": [
+        "not_required",
+        "user_requested_search",
+        "current_information",
+        "niche_information",
+        "disputed_claim",
+        "high_stakes",
+        "technical_versioned",
+        "legal_medical_financial_policy",
+        "research_synthesis",
+        "product_or_market_comparison",
+        "other"
+      ],
+      "default": "not_required"
+    },
+    "search_scope": {
+      "type": "string",
+      "description": "Concise description of topic, source universe, date, jurisdiction, product version, population, or other coverage boundaries."
+    },
+    "source_types_used": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "official_documentation",
+          "primary_law_or_regulation",
+          "standards_or_guidelines",
+          "peer_reviewed_research",
+          "systematic_review_or_meta_analysis",
+          "original_dataset",
+          "company_filing_or_primary_statement",
+          "reputable_journalism",
+          "expert_analysis",
+          "vendor_material",
+          "community_or_forum",
+          "social_media",
+          "user_provided_context",
+          "tool_result",
+          "not_applicable",
+          "other"
+        ]
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "search_strategy_summary": {
+      "type": "string",
+      "description": "Short summary of retrieval approach; may be not_applicable."
+    },
+    "source_appraisal": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "role",
+          "quality"
+        ],
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "mixed",
+              "not_applicable"
+            ]
+          },
+          "limitation": {
+            "type": "string"
+          }
+        }
+      },
+      "default": []
+    },
+    "contrary_or_competing_evidence_checked": {
+      "type": "boolean",
+      "default": false
+    },
+    "completeness_level": {
+      "type": "string",
+      "enum": [
+        "not_applicable",
+        "single_source_check",
+        "sufficient_for_answer",
+        "representative_not_exhaustive",
+        "systematic_review_like",
+        "insufficient"
+      ],
+      "default": "not_applicable"
+    },
+    "known_gaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "confidence_basis": {
+      "type": "string",
+      "description": "Why the stated uncertainty/confidence level is justified."
+    },
+    "evidence_quality": {
+      "type": "string",
+      "enum": [
+        "not_applicable",
+        "low",
+        "medium",
+        "high",
+        "mixed"
+      ],
+      "default": "not_applicable"
+    }
+  }
+}

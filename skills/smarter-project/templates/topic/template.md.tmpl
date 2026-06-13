@@ -1,0 +1,31 @@
+---
+topic: {{ topic_name }}
+template_profile: {{ template_profile | default("generic") }}
+template_type: {{ template_type | default("通用建构型") }}
+template_ref: {{ template_ref | default("references/base-topic-templates.md") }}
+updated: {{ updated | default(created) }}
+---
+
+# 模板 · {{ topic_name }}
+
+> **定位**：本文件是话题的第四组件，说明本话题如何建构 `card.md` 内容。`scratch.md` 记录过程，`card.md` 沉淀结论，`tasks.md` 管执行，`template.md` 只约束写入方式。
+> **边界**：`template.md` 不是第四个真理源，不记录具体结论或任务状态；未知字段保留“（待定）”。
+> **参考**：`{{ template_ref | default("references/base-topic-templates.md") }}`
+
+---
+
+## 1 写入边界
+
+{{ template_boundary | default("说明本话题的写入边界、重复单元和必要的阅读/渲染方式。") }}
+
+## 2 Section 写入规则
+
+{{ section_templates_rendered | default("| Section/对象 | 写入规则 |\n|:---|:---|\n| 写入边界 | 说明 card.md 各 section 应承载什么，不承载什么。 |") }}
+
+## 3 Unit 模板
+
+{{ unit_templates_rendered | default("<!-- unit:note_unit section:1 name:通用条目 -->\n### 条目：<名称>\n\n| 字段 | 内容 |\n|:---|:---|\n| 对象 | 本条目描述什么 |\n| 位置 | 应归入 card.md 的哪个 section |\n| 内容 | 当前可确认的结论 |\n| 待定 | 未知或待验证的信息 |\n<!-- /unit -->") }}
+
+## 4 渲染约定
+
+{{ renderer_rules_rendered | default("- 普通话题默认使用 Markdown 小节和表格；只有地图型对象才生成 Mermaid 或 dashboard。") }}

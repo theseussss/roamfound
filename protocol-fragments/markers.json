@@ -1,0 +1,73 @@
+{
+  "_comment": "fragment 编号按插入顺序 1-8，文件名字典序即最终位置顺序。每个 fragment 对应一对 JC-marker 圈在用户级 CLAUDE.md 里。install 幂等，update 模式找 marker 替换，uninstall 删 marker 间内容。",
+  "plugin_version": "1.5.1",
+  "fragments": [
+    {
+      "id": "identity_check",
+      "file": "01-identity-check.md",
+      "marker_begin": "<!-- JC:IDENTITY_CHECK:BEGIN v1.0 -->",
+      "marker_end": "<!-- JC:IDENTITY_CHECK:END -->",
+      "insert_after_line_match": "<!-- User customizations -->",
+      "insert_mode": "after_line",
+      "description": "§1.1 身份查验协议 · 跨 AI 诚实准则"
+    },
+    {
+      "id": "env_verify",
+      "file": "02-env-verify.md",
+      "marker_begin": "<!-- JC:ENV_VERIFY:BEGIN v1.0 -->",
+      "marker_end": "<!-- JC:ENV_VERIFY:END -->",
+      "insert_after_section": "# §1.1 身份查验协议（最高优先级）",
+      "description": "§1.2 环境验证 · 中转站/远程/切机器时自检 cwd/平台/git/工具"
+    },
+    {
+      "id": "startup_align",
+      "file": "03-startup-align.md",
+      "marker_begin": "<!-- JC:STARTUP_ALIGN:BEGIN v1.0 -->",
+      "marker_end": "<!-- JC:STARTUP_ALIGN:END -->",
+      "insert_after_section": "# §1.2 环境验证",
+      "description": "§1.3 启动对齐 · 打分（用户认知×AI自信）+ 建标准（目标清晰即实现）"
+    },
+    {
+      "id": "language",
+      "file": "04-language.md",
+      "marker_begin": "<!-- JC:LANGUAGE:BEGIN v1.0 -->",
+      "marker_end": "<!-- JC:LANGUAGE:END -->",
+      "insert_after_section": "# §1.3 启动对齐",
+      "description": "# Language · 中文思考与输出约定"
+    },
+    {
+      "id": "interaction_protocol",
+      "file": "05-interaction-protocol.md",
+      "marker_begin": "<!-- JC:INTERACTION_PROTOCOL:BEGIN v1.0 -->",
+      "marker_end": "<!-- JC:INTERACTION_PROTOCOL:END -->",
+      "insert_after_section": "# Language",
+      "description": "# 交互协议 · 开头三段+§2.1-§2.6 核心六条"
+    },
+    {
+      "id": "map_feedback",
+      "file": "06-map-feedback.md",
+      "marker_begin": "<!-- JC:MAP_FEEDBACK:BEGIN v1.0 -->",
+      "marker_end": "<!-- JC:MAP_FEEDBACK:END -->",
+      "insert_after_line_match": "2.6.7. 检索行为规范",
+      "insert_mode": "after_paragraph",
+      "description": "§2.6.8 地图感反馈 · 复杂多轮任务的\"我们在哪\""
+    },
+    {
+      "id": "edit_levels",
+      "file": "07-edit-levels.md",
+      "marker_begin": "<!-- JC:EDIT_LEVELS:BEGIN v1.0 -->",
+      "marker_end": "<!-- JC:EDIT_LEVELS:END -->",
+      "insert_after_line_match": "不启用 skill 时退化为抽象层",
+      "insert_mode": "after_paragraph",
+      "description": "§2.6.9 改动分级纪律 · L1-L4 判级（能低不高）"
+    },
+    {
+      "id": "jailbreak",
+      "file": "08-jailbreak.md",
+      "marker_begin": "<!-- JC:JAILBREAK:BEGIN v1.0 -->",
+      "marker_end": "<!-- JC:JAILBREAK:END -->",
+      "insert_mode": "append_eof",
+      "description": "越狱栏目 · 一个位置说一句当下最想说的话"
+    }
+  ]
+}

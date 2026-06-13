@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "jiacong-flow",
+  "description": "roamfound — 以话题为组织单元、服从人类天性的人-Agent 协作框架。结构化话题流转 + 复杂提案能力 + 认知对齐协议 + 可选 PostToolUse hook 自动记录流转历史。",
+  "owner": {
+    "name": "Wang Jiacong (theseussss)",
+    "url": "https://github.com/theseussss"
+  },
+  "plugins": [
+    {
+      "name": "jiacong-flow",
+      "description": "roamfound（jiacong-flow engine）— 三位一体话题管理(scratch/card/tasks) + one-turn-proposal 复杂提案 skill + CLAUDE.md 8 fragment 注入 + flow-log 事件溯源 + 可选 PostToolUse hook。适用学术论文 / 实证研究 / 代码项目 / 短平快四类套餐。",
+      "source": "./",
+      "category": "productivity",
+      "tags": ["project-management", "topic-flow", "proposal", "skills", "protocol-fragments", "cognitive-alignment", "chinese"]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "_comment": "Hook 注册由 hook_auto_install.py 写入 settings.local.json（含正确 Python 路径）。此处留空避免与 settings.local.json 重复触发。K1-K4 设计见 topics/005_HooksRepair。",
+  "hooks": {}
+}

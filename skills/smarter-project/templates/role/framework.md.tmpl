@@ -1,0 +1,53 @@
+---
+id: {{ framework_id }}
+card_type: framework
+scope: {{ scope }}
+category: frameworks
+created: {{ created }}
+verified_projects: {{ verified_projects | default("[]") }}
+---
+
+# {{ framework_title }}
+
+> **一句话**：{{ tagline | default("（这个框架用一句话怎么说）") }}
+> **适用触发**：{{ trigger_hint | default("（什么类型的问题应调用此框架）") }}
+
+---
+
+## 📑 本卡目录
+
+- 1 核心原理
+- 2 操作步骤
+- 3 适用条件
+- 4 局限
+- 5 组合
+
+---
+
+## 1 核心原理
+
+{{ core_principle | default("（这个框架的第一性原理是什么——为什么它有效，它假设了什么）") }}
+
+## 2 操作步骤
+
+{{ steps | default("（使用此框架时的具体操作序列。每步说清输入、动作、产出）") }}
+
+## 3 适用条件
+
+{{ conditions | default("（什么类型的问题、什么阶段、什么前提下应调用此框架。至少 2-3 个触发条件）") }}
+
+## 4 局限
+
+{{ limits | default("（此框架处理不了什么、在什么条件下会失效或误导。局限用于触发组合补位）") }}
+
+## 5 组合
+
+{{ combinations | default("（与哪些人物卡或其他框架卡配合使用。用 `[[id]]` 链接语法）") }}
+
+---
+
+## 🔗 关联
+
+- **相关框架**：{{ related_frameworks | default("（同类或互补框架的 id 列表）") }}
+- **常用人物**：{{ related_personas | default("（常与此框架搭配的人物卡 id 列表）") }}
+- **验证记录**：{{ verification_notes | default("（在哪些项目/话题中使用过——升级全局时需填充）") }}

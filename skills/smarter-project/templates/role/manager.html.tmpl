@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ project_name }} · 角色库双向通道</title>
+<style>
+  :root {
+    --bg: #fafaf7;
+    --fg: #1e1e1e;
+    --muted: #6b7280;
+    --border: #d1d5db;
+    --card: #ffffff;
+    --accent: #2563eb;
+    --danger: #dc2626;
+    --success: #059669;
+    --drop-highlight: #dbeafe;
+    --global-band: #eef2ff;
+    --project-band: #fef3c7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 20px 28px 40px;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.5;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+  }
+  h1 { margin: 0; font-size: 20px; font-weight: 600; }
+  .hint {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    color: #78350f;
+  }
+  .hint strong { color: #78350f; }
+  .gate {
+    background: #fef2f2;
+    border: 2px dashed var(--danger);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  .gate input[type="checkbox"] {
+    margin-right: 8px;
+    transform: scale(1.1);
+  }
+  .gate.active {
+    background: #f0fdf4;
+    border-color: var(--success);
+    color: #065f46;
+  }
+  .panel-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    min-height: 500px;
+  }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .panel-header h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .panel-global .panel-header { background: var(--global-band); margin: -14px -16px 10px; padding: 10px 16px; border-radius: 8px 8px 0 0; }
+  .panel-project .panel-header { background: var(--project-band); margin: -14px -16px 10px; padding: 10px 16px; border-radius: 8px 8px 0 0; }
+  .panel-body {
+    flex: 1;
+    min-height: 400px;
+    padding: 4px;
+    border: 2px dashed transparent;
+    border-radius: 6px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .panel-body.drop-over {
+    background: var(--drop-highlight);
+    border-color: var(--accent);
+  }
+  .role-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: grab;
+    font-size: 13px;
+  }
+  .role-card:active { cursor: grabbing; }
+  .role-card.dragging { opacity: 0.4; }
+  .role-card .role-id {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+  .role-card .role-meta {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .role-card .role-verified {
+    display: inline-block;
+    background: #d1fae5;
+    color: #065f46;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 11px;
+    margin-left: 4px;
+  }
+  .category {
+    margin-bottom: 14px;
+  }
+  .category-title {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 6px;
+    border-bottom: 1px dotted var(--border);
+    margin-bottom: 6px;
+  }
+  .log-section {
+    margin-top: 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .log-section h3 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .log-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+  }
+  .log-list li {
+    padding: 4px 0;
+    border-bottom: 1px dotted var(--border);
+  }
+  .log-list li.upgrade { color: var(--success); }
+  .log-list li.clone { color: var(--accent); }
+  .log-list li.reject { color: var(--danger); }
+  .empty {
+    color: var(--muted);
+    font-style: italic;
+    font-size: 13px;
+    padding: 20px 8px;
+    text-align: center;
+  }
+  footer {
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+    margin-top: 20px;
+  }
+  .btn {
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: #ffffff;
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--accent); color: #ffffff; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎭 角色库双向通道 · {{ project_name }}</h1>
+  <div>最后更新：{{ generated_at }}</div>
+</header>
+
+<div class="hint">
+  <strong>操作说明：</strong>拖拽角色卡在两栏间移动。
+  <br>· <strong>全局 → 项目（左→右）</strong>：克隆继承，用户确认即可。
+  <br>· <strong>项目 → 全局（右→左）</strong>：升级，需先勾选下方"已跨项目验证"门，否则拒绝。
+  <br>· <strong>不做</strong>自动升级 / 强制同步 / 命令行升级，一切走本可视化。
+</div>
+
+<div class="gate" id="approval-gate">
+  <label>
+    <input type="checkbox" id="verified-check">
+    <strong>已跨项目验证（≥ 2 个项目确认有效）</strong>——勾选后才能执行右→左（项目→全局）升级
+  </label>
+</div>
+
+<div class="panel-grid">
+
+  <div class="panel panel-global">
+    <div class="panel-header">
+      <h2>🌐 全局角色库</h2>
+      <span style="font-size: 12px; color: var(--muted);">&lt;skill根&gt;/roles-library/</span>
+    </div>
+    <div class="panel-body" id="panel-global" data-panel="global">
+      {% if global_roles %}
+        {%- set ns = namespace(current_cat='') -%}
+        {%- for r in global_roles -%}
+        {%- if r.category != ns.current_cat -%}
+        {%- if ns.current_cat %}</div>{% endif %}
+        <div class="category">
+          <div class="category-title">{{ r.category }}</div>
+        {%- set ns.current_cat = r.category -%}
+        {%- endif -%}
+        <div class="role-card" draggable="true"
+             data-id="{{ r.id }}"
+             data-scope="global"
+             data-category="{{ r.category }}"
+             data-verified="{{ r.verified_projects | default([]) | length }}">
+          <div class="role-id">{{ r.name | default(r.id) }}</div>
+          <div class="role-meta">
+            id: <code>{{ r.id }}</code>
+            {% if r.verified_projects %}<span class="role-verified">验证于 {{ r.verified_projects | length }} 个项目</span>{% endif %}
+          </div>
+        </div>
+        {%- endfor -%}
+        </div>
+      {% else %}
+      <div class="empty">（全局角色库为空，从项目升级开始积累）</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="panel panel-project">
+    <div class="panel-header">
+      <h2>📂 项目角色库</h2>
+      <span style="font-size: 12px; color: var(--muted);">&lt;项目根&gt;/base/perspectives/</span>
+    </div>
+    <div class="panel-body" id="panel-project" data-panel="project">
+      {% if project_roles %}
+        {%- set ns2 = namespace(current_cat='') -%}
+        {%- for r in project_roles -%}
+        {%- if r.category != ns2.current_cat -%}
+        {%- if ns2.current_cat %}</div>{% endif %}
+        <div class="category">
+          <div class="category-title">{{ r.category }}</div>
+        {%- set ns2.current_cat = r.category -%}
+        {%- endif -%}
+        <div class="role-card" draggable="true"
+             data-id="{{ r.id }}"
+             data-scope="project"
+             data-category="{{ r.category }}"
+             data-verified="{{ r.verified_projects | default([]) | length }}">
+          <div class="role-id">{{ r.name | default(r.id) }}</div>
+          <div class="role-meta">
+            id: <code>{{ r.id }}</code>
+            {% if r.verified_projects %}<span class="role-verified">验证于 {{ r.verified_projects | length }} 个项目</span>{% endif %}
+          </div>
+        </div>
+        {%- endfor -%}
+        </div>
+      {% else %}
+      <div class="empty">（项目角色库为空，新建或从全局克隆）</div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<div class="log-section">
+  <h3>📜 本次会话操作记录</h3>
+  <ul class="log-list" id="log-list">
+    <li class="empty">（尚无操作）</li>
+  </ul>
+  <div style="margin-top: 10px;">
+    <button class="btn" id="export-log">导出 JSON（写入 .claude/role_manager-log.json）</button>
+  </div>
+</div>
+
+<footer>
+  由 <code>role_manager.py</code> 启动 · smarter-project v2 · 审批门规则见 references/roles-ops.md §4
+</footer>
+
+<script>
+(function() {
+  var logEntries = [];
+  var logList = document.getElementById('log-list');
+  var verifiedCheck = document.getElementById('verified-check');
+  var gate = document.getElementById('approval-gate');
+
+  verifiedCheck.addEventListener('change', function() {
+    if (verifiedCheck.checked) {
+      gate.classList.add('active');
+    } else {
+      gate.classList.remove('active');
+    }
+  });
+
+  function renderLog() {
+    if (logEntries.length === 0) {
+      logList.innerHTML = '<li class="empty">（尚无操作）</li>';
+      return;
+    }
+    logList.innerHTML = '';
+    logEntries.forEach(function(e) {
+      var li = document.createElement('li');
+      li.className = e.type;
+      li.textContent = '[' + e.time + '] ' + e.type.toUpperCase() + ' · ' + e.role_id + ' : ' + e.from + ' → ' + e.to + (e.note ? ' (' + e.note + ')' : '');
+      logList.appendChild(li);
+    });
+  }
+
+  function logAction(type, roleId, from, to, note) {
+    var now = new Date();
+    var stamp = now.toISOString().slice(0, 19).replace('T', ' ');
+    logEntries.push({ type: type, role_id: roleId, from: from, to: to, time: stamp, note: note || '' });
+    renderLog();
+  }
+
+  var cards = document.querySelectorAll('.role-card');
+  cards.forEach(function(card) {
+    card.addEventListener('dragstart', function(e) {
+      card.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', JSON.stringify({
+        id: card.dataset.id,
+        scope: card.dataset.scope,
+        category: card.dataset.category
+      }));
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', function() {
+      card.classList.remove('dragging');
+    });
+  });
+
+  var panels = document.querySelectorAll('.panel-body');
+  panels.forEach(function(panel) {
+    panel.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      panel.classList.add('drop-over');
+    });
+    panel.addEventListener('dragleave', function() {
+      panel.classList.remove('drop-over');
+    });
+    panel.addEventListener('drop', function(e) {
+      e.preventDefault();
+      panel.classList.remove('drop-over');
+      var data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      var targetScope = panel.dataset.panel;
+      var sourceScope = data.scope;
+
+      if (sourceScope === targetScope) {
+        logAction('clone', data.id, sourceScope, targetScope, '同栏内部移动（分类调整）');
+        return;
+      }
+
+      // 跨栏：必须审批门通过（仅在右→左时）
+      if (sourceScope === 'project' && targetScope === 'global') {
+        if (!verifiedCheck.checked) {
+          logAction('reject', data.id, sourceScope, targetScope, '未勾选"已跨项目验证"，拒绝升级');
+          alert('⛔ 升级拒绝：请先勾选"已跨项目验证（≥ 2 个项目）"审批门。');
+          return;
+        }
+        logAction('upgrade', data.id, sourceScope, targetScope, '已通过审批门，升级到全局');
+      } else {
+        // global → project = 克隆继承
+        logAction('clone', data.id, sourceScope, targetScope, '全局克隆到项目');
+      }
+
+      // 将卡片 DOM 移到目标栏（不做服务端落盘，由 role_manager.py 接收 log 后处理）
+      var draggedCard = document.querySelector('.role-card[data-id="' + data.id + '"][data-scope="' + sourceScope + '"]');
+      if (draggedCard) {
+        draggedCard.dataset.scope = targetScope;
+        panel.appendChild(draggedCard);
+      }
+    });
+  });
+
+  document.getElementById('export-log').addEventListener('click', function() {
+    var payload = {
+      project: "{{ project_name }}",
+      generated_at: new Date().toISOString(),
+      actions: logEntries
+    };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'role_manager-log.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('📥 已导出 role_manager-log.json\n请放入项目 .claude/ 目录，由 role_manager.py 后置处理（实际文件移动）');
+  });
+})();
+</script>
+
+</body>
+</html>

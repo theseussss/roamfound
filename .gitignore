@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# 冒烟/测试产物
+_demo*/
+_test*/
+*.bak
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# flow-log 是用户级产物，不应入库
+**/.claude/flow-log.jsonl
+**/.claude/.cache/
+
+# OMC session 状态
+.omc/
+**/.omc/

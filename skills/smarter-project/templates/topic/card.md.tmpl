@@ -1,0 +1,61 @@
+---
+topic_id: {{ topic_id }}
+parent: {{ parent | default("null") }}
+root: {{ root }}
+status: ⏳ 进行中
+created: {{ created }}
+updated: {{ created }}
+base_topic: {{ base_topic | default(false) }}
+tags: []
+role: {{ role | default("") }}
+acceptance_criteria: []
+toc:
+{{ toc_yaml | default('  - "1 [章节标题] | [本章承载什么内容]"\n  - "2 [章节标题] | [本章承载什么内容]"') }}
+toc_locked: {{ toc_locked | default(true) }}
+---
+
+# {{ title }}
+
+## 📑 本卡目录
+
+<!-- ⚠️ 本区由 card_write.py 自动渲染，勿直接编辑。源：frontmatter toc 字段 -->
+<!-- 结构变更须用户审批：改 frontmatter toc → card_write.py --mode restructure -->
+
+{{ toc_rendered | default("- 1 [章节标题] — *[本章承载什么内容]*\n- 2 [章节标题] — *[本章承载什么内容]*") }}
+
+---
+
+{{ sections_rendered | default("## 1 [章节标题]\n\n（待填）\n\n## 2 [章节标题]\n\n（待填）") }}
+
+---
+
+## 🔗 链接
+
+- **父**：{{ parent_link | default("—") }}
+- **子**：
+- **相关**：
+
+<!--
+链接语法（见 references/topic-lifecycle.md §8）：Obsidian 风格 [[NNN_简称]]
+示例：[[112_脚本工具链]]
+-->
+
+---
+
+## 💬 最佳原话
+
+<!--
+保留用户/AI 的关键原话，优先理念/判断/洞察层面的表达。
+原话比摘要更能还原语境与思维脉络。
+-->
+
+> （待填）
+
+---
+
+## 🧾 版本与脚注
+
+<!--
+可选：仅在本卡经历重大重写/推翻时记录。
+例：2026-04-19 重写 §2，原 §2 内容已迁入 scratch.md。
+-->

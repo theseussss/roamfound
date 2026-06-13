@@ -1,0 +1,132 @@
+# {{ project_name }}
+
+> **项目类型**：{{ project_type }}
+> **最后更新**：{{ today }}
+> **smarter-project**：已加载 ✅
+> **项目根确认**：以有效 `.jiacong/project.json` 为授权判据；入口文档和旧痕迹只作线索
+
+---
+
+## 1. 项目入口契约
+
+`AGENTS.md` 是本项目的项目管理 canonical 入口。Claude、Gemini、Hermes 等 CLI 在项目根读取各自 adapter 文件时，应回到本文件理解项目结构、记录位置和协作边界。
+
+| 对象 | 位置 | 职责 |
+|:---|:---|:---|
+| 项目确认 | `.jiacong/project.json` | 确认当前目录是 Jiacong Flow 管理根 |
+| 入口关系 | `.jiacong/entrypoints.json` | 记录 `AGENTS.md`、CLI adapter 与 legacy fallback 的机器可读关系 |
+| 项目入口 | `AGENTS.md` | 给 AI 的项目地图、路由契约和权威指针 |
+| CLI adapter | `CLAUDE.md` / `GEMINI.md` / `HERMES.md` | 指向 `AGENTS.md`，不复制项目规则 |
+| Claude legacy | `.claude/CLAUDE.md` | 旧项目兼容或 Claude 专属 fallback，不作为新项目中心 |
+
+---
+
+## 2. Framework → `doc/Framework/`
+
+{% if framework_entries -%}
+`doc/Framework/` 是项目级最高压缩层。Vision、Structure、Style、Trace 分别承载项目目标图景、对象结构、表达规则和任务链路；具体讨论先进 `topics/` 与 `scratch.md`，只有稳定、可跨话题复用的结论才回写 Framework。
+
+| Framework | 主文件 | 承载重点 |
+|:---|:---|:---|
+{% for item in framework_entries -%}
+| {{ item.name }} | `{{ item.doc_path }}` | {{ item.summary }} |
+{% endfor %}
+
+{% if project_type == "学术" -%}
+本项目按学术论文工作流初始化：Vision 负责立稿图景与验收，Structure 负责问题链、概念链、论证链和材料归位，Style 负责文风、术语、句法和引文图表表达，Trace 负责修订任务链。
+{% elif project_type == "实证" -%}
+本项目按实证研究工作流初始化：Vision 负责研究问题、解释对象、贡献和结果样态，Structure 负责研究设计、数据链条、变量地图、模型路径和结果归位，Style 负责统计报告、图表呈现、结果解释和变量命名，Trace 负责分析任务链。
+{% elif project_type == "代码" -%}
+本项目按代码/产品工作流初始化：Vision 负责使用场景、核心问题、核心能力和验收，Structure 负责 codemap、模块节点、关系地图和变更影响，Style 负责视觉范围、交互手感和实现索引，Trace 负责 issue、bug、技术债与验证链。
+{% endif -%}
+{%- else -%}
+本项目是短平快类型，默认不创建 Framework 四件套。若任务后来长成项目级对象，再在 `doc/Framework/` 建立 Vision / Structure / Style / Trace；早期只需把可交付产物放入 `doc/`，把过程记录放入 `logs/stream.md`。
+{%- endif %}
+
+---
+
+## 3. 讨论、任务与流水
+
+{% if has_topics -%}
+| 层 | 位置 | 写入规则 |
+|:---|:---|:---|
+| 讨论过程 | `topics/<NNN_话题>/scratch.md` | 记录当轮共识、问题、判断和最佳原话 |
+| 结构化结论 | `topics/<NNN_话题>/card.md` | 沉淀已经稳定的话题结构与可复用判断 |
+| 执行动作 | `topics/<NNN_话题>/tasks.md` | 记录任务状态、验收和后续动作 |
+| 生命周期流水 | `logs/stream.md` | 只记录话题开启、切换、关闭等生命周期节点 |
+
+`topics/` 是讨论晶格，按 `root` 字段在 `topics/_tree.md` 中分组。普通延续轮写 `scratch.md`，不写流水；只有话题生命周期事件才写 `logs/stream.md`。
+{%- else -%}
+短平快项目默认不创建 `topics/` 话题晶格。过程性事件记录到 `logs/stream.md`；若任务扩展为多轮讨论，再补建 `topics/` 或升级为更完整的项目类型。
+{%- endif %}
+
+---
+
+## 4. 当前状态与派生视图
+
+| 对象 | 位置 | 说明 |
+|:---|:---|:---|
+| 当前焦点 | `.jiacong/focus.json` | JSON 状态文件，核心字段 `topic_id`；旧 `.claude/focus` 仅作兼容 fallback |
+| 仪表盘 | `.jiacong/dashboard/index.html` | 由脚本生成的派生视图，不作为手写事实源 |
+| 话题树 | `topics/_tree.md` | 建话题后由 `tree_gen.py` 生成；短平快项目可无此文件 |
+| 流水 | `logs/stream.md` | 项目生命周期记录，默认单文件，超过阈值后再按规约切分 |
+
+---
+
+## 5. 项目资源与源码层
+
+`base/` 是认知基础设施：`perspectives/` 放视角与角色，`resources/` 放素材与参考，`tools/` 放加工手段，`disposition/` 放行动者、场域和连接动作的布阵关系。`draft/` 是人类涂鸦区，AI 默认只读。
+
+{% if project_type == "代码" -%}
+代码项目可按需写入 `.jiacong/source.json` 记录源码层布局，例如 `source_root`、`repo_git_path`、`worktrees_root`、`main_name`、`source_dir`。它只记录静态布局，不维护“当前代码目录”；代码操作以当前 cwd、用户显式路径或 Git worktree 现场为准，项目记录永远写管理根。
+{%- else -%}
+本项目默认不需要源码层状态。若后续引入独立源码仓库或 worktree，再补 `.jiacong/source.json`，并保持项目记录与源码工作现场分层。
+{%- endif %}
+
+{% if roots -%}
+### 推荐 root 标签
+
+这是标签清单，不是话题卡。新建话题时可从 `topics/_seeds.md` 选择 `--root <标签>`；如项目结构演进，可按结构权规则增补。
+
+{% for root in roots -%}
+- `{{ root.label }}`
+{% endfor %}
+{%- endif %}
+
+---
+
+## 6. 文件索引
+
+```text
+项目根/
+├── .jiacong/
+│   ├── project.json            — 项目根确认标记
+│   ├── entrypoints.json        — 多 CLI 入口关系
+│   ├── focus.json              — 当前焦点状态（按需生成）
+│   ├── dashboard/              — 仪表盘与派生状态
+│   └── source.json             — 源码层布局元数据（按需，不是 active 指针）
+├── AGENTS.md                   — 项目管理 canonical 入口
+├── CLAUDE.md / GEMINI.md / HERMES.md — CLI adapter 入口（指向 AGENTS.md）
+├── .claude/                    — Claude hook 配置与 legacy fallback
+{% if has_topics -%}
+├── topics/                     — 讨论层话题晶格
+│   ├── _seeds.md               — 推荐 root 标签清单
+│   └── _tree.md                — 话题树（生成文件）
+{% endif -%}
+├── doc/
+{% if framework_entries -%}
+│   └── Framework/              — Vision / Structure / Style / Trace 最高压缩层
+{% endif -%}
+├── logs/
+│   └── stream.md               — 生命周期流水
+{% if has_base -%}
+├── base/                       — 认知基础设施
+│   ├── perspectives/           — 视角：思维框架、高手模式、角色卡
+│   ├── resources/              — 资源：素材矿、参考材料与外部检索线索
+│   ├── tools/                  — 工具：加工手段
+│   └── disposition/            — 布局：行动者、场域、连接动作的布阵关系
+{% endif -%}
+└── draft/                      — 人类涂鸦区（AI 默认只读）
+```
+
+完整架构见 `references/init-project.md`；root 标签和套餐只是初始化建议，结构变化按 smarter-project 结构权规则处理。

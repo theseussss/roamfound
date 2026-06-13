@@ -1,0 +1,17 @@
+name: jiacong-flow
+version: "0.2.0"
+description: "roamfound for Hermes（jiacong-flow engine）: project governance hooks, focus tracking, scratch discipline, watcher, health checks. Self-contained — no external paths."
+author: "Wang Jiacong (theseussss)"
+kind: standalone
+provides_hooks:
+  - on_session_start
+  - pre_llm_call
+  - post_tool_call
+  - transform_tool_result
+  - transform_llm_output
+  - on_session_end
+provides_tools:
+  - jiacong_flow_health_check
+  - jiacong_flow_focus
+  - jiacong_flow_touch_scratch
+  - jiacong_flow_watcher

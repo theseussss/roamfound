@@ -1,0 +1,4 @@
+interface:
+  display_name: "One Turn Proposal"
+  short_description: "Evidence-aware, methodology-backed, judgment-led answers"
+  icon: "🧭"

@@ -1,0 +1,16 @@
+{
+  "_comment": "smarter-project flow-log PostToolUse hook 示例（默认不启用）。要启用，把下方 hooks.PostToolUse 合并到你的 ~/.claude/settings.json。替换 <SKILL_ROOT> 为 skill 实际路径。Tokens 成本：hook 只读 md + 写 flow-log.jsonl，不注入 context 到 AI 对话。",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python <SKILL_ROOT>/scripts/flow_hook.py --event-json"
+          }
+        ]
+      }
+    ]
+  }
+}
